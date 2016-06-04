@@ -7,6 +7,7 @@
 #include "puyo.h"
 #include "const.h"
 #include <string>
+
 enum GameMode { TOKOTON, HUTARIDE, AITO, GAMEMODE_MAX };
 void operator ++ (GameMode &id);
 void operator -- (GameMode &id);

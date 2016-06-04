@@ -1,6 +1,11 @@
 #pragma once
 #include"DxLib.h"
-#include"vector.h"
+
+struct Vector
+{
+	int x;
+	int y;
+};
 
 // ‰æ‘œ‚ÉŠÖ‚·‚éƒNƒ‰ƒX
 class Graph
