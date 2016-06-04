@@ -13,7 +13,7 @@
 //#define LEARN                                           
 //#define LEARN2
 //#define ZOROME
-#define AIVSAI
+//#define AIVSAI
 #define SPEED 10
 #define AILEVEL_1p 4
 #define ONE_PLAY_LINE 4
