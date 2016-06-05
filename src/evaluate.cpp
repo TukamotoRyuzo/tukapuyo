@@ -594,10 +594,10 @@ Score LightField::evaluate(LightField& enemy, int remain_time)
 
 	// 死んでいる局面なら負け
 	if (isDeath())
-		return SCORE_LOSE;
+		return -SCORE_INFINITE;
 
 	if (enemy.isDeath())
-		return SCORE_WIN;
+		return SCORE_INFINITE;
 
 	// フィールドが持っている連鎖を求めておく．戻り値は最大連鎖のスコア.
 	// 求めた連鎖は，this->chainsList()に入っている．

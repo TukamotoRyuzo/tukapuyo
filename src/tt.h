@@ -24,40 +24,48 @@ struct TTEntry
 	// 局面のハッシュキーは自分^相手である
 
 	// 以下、getter
-	// 意味は↓のprivateを参照しろ
 
-	uint32_t        key() const { return key32_; }
-	Move           move() const { return Move(move16_); }
-	Score         score() const { return static_cast<Score>(score_); }
-	uint8_t remainDepth() const { return remain_depth_; }
-	uint8_t  generation() const { return generation_; }
-	Bound         bound() const { return static_cast<Bound>(bound_); }
-	Flag         player() const { return static_cast<Flag>(player_);}
-	int16_t        time() const { return time_; }
-	int16_t       ojama() const { return ojama_; }
+	uint32_t key()        const { return key32_;        }
+	Move     move()       const { return Move(move16_); }
+	Score    score()      const { return Score(score_); }
+	uint8_t  depth()      const { return depth_;        }
+	uint8_t  generation() const { return generation_;   }
+	Bound    bound()      const { return Bound(bound_); }
+	Flag     player()     const { return Flag(player_); }
+	int16_t  time()       const { return time_;         }
+	int16_t  ojama()      const { return ojama_;        }
 
-	void save(uint32_t key, uint16_t move, int16_t score, uint8_t remain_depth, uint8_t gen, uint8_t bound, uint8_t player,
-		int16_t remain_time, int16_t ojama)
+	void save(Key k, uint16_t m, int16_t s, uint8_t d, uint8_t g, uint8_t b, uint8_t p, int16_t rt, int16_t o)
 	{
-		key32_			= key;
-		move16_			= move;
-		score_			= score;
-		remain_depth_   = remain_depth;
-		generation_		= gen;
-		bound_			= bound;
-		player_			= player;
-		time_			= remain_time;
-		ojama_			= ojama;
+		if (m || (k >> 32) != key32_)
+			move16_ = m;
+
+		if ((k >> 32) != key32_
+			|| d > depth_ - 4
+			|| b == BOUND_EXACT)
+		{
+			key32_ = (uint32_t)(k >> 32);
+			move16_ = m;
+			score_ = s;
+			depth_ = d;
+			generation_ = g;
+			bound_ = b;
+			player_ = p;
+			time_ = rt;
+			ojama_ = o;
+		}
 	}
 
 	// 世代の設定用
 	void setGeneration(uint8_t g) { generation_ = g; }
 private:
 
+	friend class TranspositionTable;
+
 	uint32_t key32_;
 	int16_t move16_;
 	int16_t score_;
-	uint8_t remain_depth_;
+	uint8_t depth_;
 	uint8_t generation_;
 	uint8_t bound_;
 	uint8_t player_;
@@ -69,96 +77,38 @@ private:
 
 class TranspositionTable 
 {
-	// 一つのclusterは、16バイト(= sizeof(TTEntry))×CLUSTER_SIZE = 64バイト。  
-	// Clusterは、rehash(探索深さが深くなったり、正確な評価値が出たとき、ハッシュに登録しなおす)のための連続したTTEntryの塊のこと。
-	static const unsigned CLUSTER_SIZE = 4; // A cluster is 64 Bytes
+	static const int CACHE_LINE_SIZE = 64;
+	static const int CLUSTER_SIZE = 4;
+
+	struct Cluster { TTEntry entry[CLUSTER_SIZE]; };
+
+	static_assert(CACHE_LINE_SIZE % sizeof(Cluster) == 0, "Cluster size incorrect");
 
 public:
-	// mem_をコンストラクタでゼロ初期化していないように見えるが
-	// グローバルで使うことを想定しているので、メンバ変数はすべて0で初期化されている。
 	~TranspositionTable() { free(mem_); }
-
-	// 置換表を調べる。置換表のエントリーへのポインター(TTEntry*)が返る。  
-	// エントリーが登録されていなければNULLが返る。
-	const TTEntry* probe(const LightField& self, const LightField& enemy) const;
-	const TTEntry* probe(const Key key) const;
-
-	// 置換表を新しい探索のために掃除する。(generation_を進める)
-	void newSearch() { ++generation_; }
-
-	// TranspositionTable::first_entry()は、与えられた局面(のハッシュキー)に該当する  
-	// 置換表上のclusterの最初のエントリーへのポインターを返す。  
-	// 引数として渡されたkey(ハッシュキー)の下位ビットがclusterへのindexとして使われる。
-	TTEntry* firstEntry(const Key key) const;
-
-	// TranspositionTable::set_size()は、置換表のサイズをMB(メガバイト)単位で設定する。  
-	// 置換表は2の累乗のclusterで構成されており、それぞれのclusterはTTEnteryのCLUSTER_SIZEで決まる。  
-	// (1つのClusterは、TTEntry::CLUSTER_SIZE×16バイト)
-	void setSize(size_t mbSize);
-
-	// 置換表上のtteのエントリーの世代を現在の世代(generation_)にする。
-	void refresh(const TTEntry* tte) const;
-
-	// TranspositionTable::clear()は、ゼロで置換表全体をクリアする。  
-	// テーブルがリサイズされたときや、ユーザーがUCI interface経由でテーブルのクリアを  
-	// 要求したときに行われる。
-	void clear();
-
-	// 置換表に値を格納する。  
-	// key : この局面のハッシュキー。
-	// v : この局面の探索の結果得たスコア
-	// d : 指し手を得たときの残り探索深さ  
-	// m : 最善手   
-	// b : 評価値のタイプ
-	// t : 手番
-	// 
-	
-	// 	BOUND_NONE →　探索していない(DEPTH_NONE)ときに、最善手か、静的評価スコアだけ置換表に突っ込みたいときに使う。  
-	// 	BOUND_LOWER →　fail-low  
-	// 	BOUND_UPPER →	fail-high  
-	// 	BOUND_EXACT →　正確なスコア  
-	void store(const Key key, int16_t score, uint8_t depth, Move move, 
-		Bound bound, uint8_t player, int16_t remain_time, int16_t ojama);
+	void newSearch() { ++generation8_; }
+	uint8_t generation() const { return generation8_; }
+	bool probe(const LightField& self, const LightField& enemy, TTEntry* &ptt) const;
+	void resize(size_t mb_size);
+	void clear() { memset(table_, 0, cluster_count_ * sizeof(Cluster)); generation8_ = 0; }
+	TTEntry* firstEntry(const Key key) const { return &table_[(size_t)key & (cluster_count_ - 1)].entry[0]; }
 
 private:
 	// 置換表のindexのmask用。  
-	// table_[hash_mask_ & 局面のhashkey] がその局面の最初のentry  
-	// hash_mask_ + 1 が確保されたTTEntryの数
-	uint32_t hash_mask_;
+	size_t cluster_count_;
 
 	// 置換表の先頭を示すポインター(確保したメモリを64バイトでアラインしたもの)
-	TTEntry* table_;
+	Cluster* table_;
 
 	// 置換表のために確保した生のメモリへのポインター。開放するときに必要。
 	void* mem_;
 
 	// 置換表のEntryの、いま使っている世代。  
 	// これをroot局面が進むごとにインクリメントしていく。
-	uint8_t generation_; 
+	uint8_t generation8_; 
 };
 
 extern TranspositionTable TT;
-
-
-// / TranspositionTable::first_entry() returns a pointer to the first entry of
-// / a cluster given a position. The lowest order bits of the key are used to
-// / get the index of the cluster.
-
-// TranspositionTable::first_entry()は、与えられた局面(のハッシュキー)に該当する
-// 置換表上のclusterの最初のエントリーへのポインターを返す。
-// 引数として渡されたkey(ハッシュキー)の下位ビットがclusterへのindexとして使われる。
-inline TTEntry* TranspositionTable::firstEntry(const Key key) const {
-
-	return table_ + ((uint32_t)key & hash_mask_);
-}
-
-// TranspositionTable::refresh()は、TTEntryが年をとる(世代が進む)のを回避するため
-// generation_の値を更新する。普通、置換表にhitしたあとに呼び出される。
-// TranspositionTable::generation_の値が引数で指定したTTEntryの世代として設定される。
-inline void TranspositionTable::refresh(const TTEntry* tte) const 
-{
-	const_cast<TTEntry*>(tte)->setGeneration(generation_);
-}
 
 // Size は 2のべき乗であること。
 template <typename T, size_t Size>

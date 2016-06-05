@@ -46,16 +46,16 @@ Score LightField::maxChainsScore(const int ply_max, const int remain_time)
 		{
 			score = searchChains(3);
 
-			if (score == SCORE_LOSE)
-				return SCORE_LOSE;
+			if (score == SCORE_MATED)
+				return SCORE_MATED;
 		}
 		else
 		{
 			// 2手以内に打てる連鎖のリストを構築する．
 			const Score chains_score = searchChains(3);
 
-			if (chains_score == SCORE_LOSE)
-				return SCORE_LOSE;
+			if (chains_score == SCORE_MATED)
+				return SCORE_MATED;
 
 			// 自分にとって致死量の連鎖を打たれて，かつ後3手ぐらいしか置けない場合は，最大限厳し目のチェックをする．
 			if (ojama_ > deadLine() && remain_time < ONEPUT_TIME * 5)
@@ -110,7 +110,7 @@ Score LightField::searchChains(const int ply_max, int ply)
 	if (ply == ply_max)
 	{
 		// ここにくる場合は連鎖が起きなかった場合なので、負けか0を返す。
-		return isDeath() ? SCORE_LOSE : SCORE_ZERO;
+		return isDeath() ? SCORE_MATED : SCORE_ZERO;
 	}
 
 	Move mlist[22];

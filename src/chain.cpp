@@ -68,7 +68,7 @@ const ChainEntry* ChainTable::probe(const Key key) const
 }
 
 // 置換表にエントリーを登録する．
-void ChainTable::store(const Key key, const uint64_t after_key, const ChainElement& ce, const Bitboard& bb)
+void ChainTable::store(const Key key, const Key after_key, const ChainElement& ce, const Bitboard& bb)
 {
 	ChainEntry *chain_entry, *replace;
 

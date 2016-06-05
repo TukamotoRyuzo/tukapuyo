@@ -2,9 +2,7 @@
 
 #include"enumoperator.h"
 #include"platform.h"
-// メモリのキャッシュラインのサイズ
-// (1バイト目を読み込むと、後続の64バイトが読み込まれる。)
-#define CACHE_LINE_SIZE 64
+
 enum
 {
 	CHAINTIME	= 70,
@@ -31,18 +29,17 @@ enum Score
 
 	// ひきわけ　
 	SCORE_DRAW = 0,
-	SCORE_KNOWN_WIN = 15000,
-	SCORE_KNOWN_LOSE = -15000,
+	SCORE_KNOWN_WIN = 10000,
+	SCORE_KNOWN_LOSE = -10000,
 	// 詰み
-	SCORE_MATE = 30000,
+	SCORE_MATE = 32000,
+	SCORE_MATED = -32000,
 
 	// 　∞
-	SCORE_INFINITE = 30001,
+	SCORE_INFINITE = 32601,
 
 	// それ以外の特殊な定数
-	SCORE_NONE = 30002,
-	SCORE_WIN = SCORE_INFINITE,
-	SCORE_LOSE = -SCORE_INFINITE,
+	SCORE_NONE = 32602,
 
 	// これらは探索用ではなく，連鎖の点数をお邪魔ぷよの個数に変える前の値の仮の限界値
 	SCORE_MAX = 999999,

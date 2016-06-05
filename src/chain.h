@@ -108,6 +108,7 @@ private:
 class ChainTable
 {
 	static const unsigned CLUSTER_SIZE = 2;
+	const int CACHE_LINE_SIZE = 64;
 public:
 	~ChainTable() { free(mem_); }
 	const ChainEntry* probe(const Key key) const ;

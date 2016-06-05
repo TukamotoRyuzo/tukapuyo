@@ -86,7 +86,7 @@ void Game::init(GameAssets* s)
 	f2 = new Field(PLAYER2, assets);
 
 	// 200MB‚Ì‹Ç–Ê•\‚ðŠm•Û
-	TT.setSize(200);
+	TT.resize(200);
 	CT.setSize(200);
 	
 	// ƒcƒ‚‚Ì‰Šú‰»‚Æ‚Õ‚æ‚Õ‚æ‚Ì“à•”î•ñ‚Ì‰Šú‰»
@@ -261,8 +261,8 @@ GameResult Game::playLoop(const GameMode mode)
 				tm.end();
 				double elapsed = tm.elapsed();
 				double nps = eval_called / elapsed;
-			//	MyOutputDebugString("score = %d\nelapsed = %.10lfs\nnode = %d\nnps = %.2lf\nchain_hit = %d\nchain_called = %d\nnode_searched = %d\n",
-			//		score, elapsed, eval_called, nps, chain_hit, chain_called, node_searched);
+				MyOutputDebugString("score = %d\nelapsed = %.10lfs\nnode = %d\nnps = %.2lf\nchain_hit = %d\nchain_called = %d\nnode_searched = %d\n",
+					score, elapsed, eval_called, nps, chain_hit, chain_called, node_searched);
 
 			}
 			if (!f2->procedure(*f1, poly_ai.operate()))

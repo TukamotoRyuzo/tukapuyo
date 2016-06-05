@@ -2,7 +2,7 @@
 #include "tt.h"
 #include <cassert>
 #include <algorithm>
-#define HASH
+//#define HASH
 unsigned int hash_hit;
 
 int AI::thinkWrapper(const Field &self, const Field &enemy)
@@ -54,11 +54,12 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 	if (depth >= 2)
 	{
 		const TTEntry *tte = TT.probe(self.key());
+
 		// ‹Ç–Ê‚ª“o˜^‚³‚ê‚Ä‚¢‚½
 		if (tte)
 		{
 			// ‹Ç–Ê•\‚É“o˜^‚³‚ê‚Ä‚¢‚é‹Ç–Ê‚ªAŒ»Ý‚Ì‹Ç–Ê‚ÌŽc‚è[‚³ˆÈã
-			if (tte->remainDepth() >= remain_depth)
+			if (tte->depth() >= remain_depth)
 			{
 				best_[depth] = tte->move();
 
@@ -74,7 +75,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 	else
 	{	
 		int score;
-		int max = SCORE_LOSE - 1;
+		int max = -SCORE_INFINITE - 1;
 		int movenum;
 		int con_prev[3];
 		self.saveConnect(con_prev);
@@ -82,7 +83,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 
 		// ’u‚­êŠ‚È‚µ == •‰‚¯
 		if ((movenum = self.generateMoves(move)) == 0)
-			return SCORE_LOSE;
+			return -SCORE_INFINITE;
 		
 #if defined(DEBUG)
 		LightField f = self;// debug
@@ -110,7 +111,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 				{
 					// ’vŽ€—ÊU‚é‚Æ‚«‚É”­‰Î‚Å‚«‚È‚¯‚ê‚Î•‰‚¯B
 					if (enemy.scoreMax() >= 30 * RATE || enemy.scoreMax() >= self.deadLine() * RATE) 
-						score = SCORE_LOSE;
+						score = -SCORE_INFINITE;
 					else 
 						score = think(self, enemy, depth + 1, timeLimit - takeTime) - takeTime;
 				}
@@ -228,7 +229,7 @@ int AI3Connect2::evalVanish(LightField self, const LightField &enemy, int depth,
 	while (self.deleteMin());
 
 	if (self.isDeath())
-		return SCORE_LOSE;
+		return -SCORE_INFINITE;
 
 	if (timeLimit < 0)
 	{

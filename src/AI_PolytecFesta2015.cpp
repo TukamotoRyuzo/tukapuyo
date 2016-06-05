@@ -8,12 +8,7 @@
 #include <cmath>
 #include "chain.h"
 
-//#define TIME_MANAGE
-
-namespace
-{	
-	int64_t time_start;
-}
+enum NodeType { ROOT, PV, NO_PV };
 
 // レベルを設定する．
 void PolytecAI::setLevel(int level)
@@ -55,7 +50,6 @@ void PolytecAI::setLevel(int level)
 
 int AI::thinkWrapperEX(Field self, Field enemy)
 {
-
 	// 静かな局面になるまで局面を進める
 	int my_remain_time = enemy.generateStaticState(self);
 
@@ -99,14 +93,13 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 	// 世代を進める
 	TT.newSearch();                             
 
-    Score alpha = SCORE_LOSE - Score(1);	// α:下限値
-	Score beta  = SCORE_WIN  + Score(1);	// β:上限値
+    Score alpha = -SCORE_INFINITE;	// α:下限値
+	Score beta  = SCORE_INFINITE;	// β:上限値
 	Score delta = alpha;
 	Score score = SCORE_ZERO;
 	continue_self_num_ = 0;
 	
 	Move best_move;
-	time_start = system_time_to_msec();
 
 	Move mlist[22];
 	int mcount = s.generateMoves(mlist);
@@ -136,7 +129,7 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 
 			// aspiration search
 			// alpha betaをある程度絞ることで、探索効率を上げる。
-			if (3 <= depth_max_ && abs(root_moves[0].prev_score_) < SCORE_WIN)
+			if (3 <= depth_max_ && abs(root_moves[0].prev_score_) < SCORE_INFINITE)
 			{
 				delta = static_cast<Score>(5);
 				alpha = static_cast<Score>(root_moves[0].prev_score_) - delta;
@@ -144,8 +137,8 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 			}
 			else
 			{
-				alpha = SCORE_LOSE - Score(1);
-				beta = SCORE_WIN + Score(1);
+				alpha = -SCORE_INFINITE;
+				beta = SCORE_INFINITE;
 			}
 
 			// aspiration search のwindow幅をはじめは小さい値にして探索し、
@@ -167,8 +160,8 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 				if (abs(score) >= Score(10000))
 				{
 					// 勝ちか負けだと判定したら、最大の幅で探索を試してみる。
-					alpha = SCORE_LOSE - Score(1);
-					beta = SCORE_WIN + Score(1);
+					alpha = -SCORE_INFINITE;
+					beta = SCORE_INFINITE;
 				}
 				else if (beta <= score)
 				{
@@ -242,46 +235,31 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	node_searched++;
 	const bool rootnode = NT == ROOT;
 
-	assert(alpha >= SCORE_LOSE - 1 && alpha < beta && beta <= SCORE_WIN + 1);
+	assert(alpha >= -SCORE_INFINITE && alpha < beta && beta <= SCORE_INFINITE);
 
-#ifdef TIME_MANAGE
-	if (depth == 1)
-	{
-		int64_t time_end = system_time_to_msec();
-		if (time_end - time_start >= 5000)
-		{
-			throw 0;
-		}
-	}
-#endif
 	// 残り深さ
 	int remain_depth = depth_max_ - depth;
 
 	// 局面表を見る
 	Move tt_move, best_move;
 	Score tt_score;
-	Key key = self.key() ^ enemy.key();
-	const TTEntry *tte = TT.probe(self, enemy);
+	TTEntry* tte;
+	const Key key = self.key() ^ enemy.key();
+	const bool tt_hit = TT.probe(self, enemy, tte);
 
 	// 局面表の指し手
 	if (rootnode)
 	{
 		if (depth_max_ == 1)
-		{
-			tt_move = tte ? tte->move() : Move::moveNone();
-		}
+			tt_move = tt_hit ? tte->move() : Move::moveNone();
 		else
-		{
 			tt_move = root_moves[0].pv_[0];
-		}
 	}
 	else
-	{
-		tt_move = tte ? tte->move() : Move::moveNone();
-	}
+		tt_move = tt_hit ? tte->move() : Move::moveNone();
 
 	// 置換表上のスコア
-	tt_score = tte ? tte->score() : SCORE_NONE;
+	tt_score = tt_hit ? tte->score() : SCORE_NONE;
 
 	// 置換表のスコアが信用に足るならそのまま返す。
 	// 条件)
@@ -294,15 +272,12 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	// betaを超えていないのであれば、BOUND_UPPER(真の値はこれより下なのでこのときbeta cutが起きないことが確定)である。
 
 	if (!rootnode 
-		&& tte != nullptr
-		&& tte->remainDepth() >= remain_depth
+		&& tt_hit
+		&& tte->depth() >= remain_depth
 		&& (remain_depth == 0
 		|| (tte->bound() == BOUND_EXACT
 		|| (tte->bound() == BOUND_LOWER && tt_score >= beta))))
 	{		
-		// この置換表の指し手が役に立ったので、置換表のエントリーの世代を現在の世代にする。
-		TT.refresh(tte);
-
 		best_[depth] = tte->move();
 
 		assert(tte->move().isNone() || tte->move().isLegal(self));
@@ -317,7 +292,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		Score s = evaluateEX(self, enemy, depth, my_remain_time);
 
 		// せっかく評価関数を呼び出したので局面表に登録しておく。
-		TT.store(key, s, 0, Move::moveNone(), BOUND_NONE, self.player(), my_remain_time, self.ojama() - enemy.ojama());
+		tte->save(key, 0, s, 0, BOUND_NONE, TT.generation(), self.player(), my_remain_time, self.ojama() - enemy.ojama());
 		return s;
 	}
 
@@ -338,10 +313,10 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	if ((move_max += self.generateMoves(pmove)) == 0)
 	{
 		// 置く場所なし == 負け
-		return SCORE_LOSE;
+		return SCORE_MATED;
 	}
 		
-	Score score, max = SCORE_LOSE - Score(1);
+	Score score, max = -SCORE_INFINITE;
 	
 	// お邪魔ぷよが降る場合はenemyのojamaを減らしているので、
 	// このmoveを調べ終わった後元に戻さなければならない
@@ -401,9 +376,9 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 				rm.score_ = score;
 
 				// 局面表をprobeするときにツモ番号を元に戻す必要があるので。
-				self.nextMinus();
+				/*self.nextMinus();
 				rm.extractPvFromTT(self, enemy, my_remain_time);
-				self.nextPlus();
+				self.nextPlus();*/
 			}
 			else
 			{
@@ -411,7 +386,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 				// ここにくるということはtt_moveが2回調べられているということ。
 				if (move[i] != tt_move)
 				{
-					rm.score_ = SCORE_LOSE;
+					rm.score_ = -SCORE_INFINITE;
 				}
 			}
 		}
@@ -419,6 +394,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		if (score > max)
 		{
 			max = score;
+			best_[depth] = move[i];	
 
 			if (max > alpha)
 			{				
@@ -428,22 +404,19 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 				{
 					// βカットされたalphaという値は正確な値ではないが、そのノードの評価値は最低でもalpha以上だということがわかる。
 					// なので、alphaはそのノードの下限値である。だからBOUND_LOWER
-					TT.store(key, alpha, remain_depth, move[i], BOUND_LOWER, self.player(), my_remain_time, self.ojama() - enemy.ojama());
-					self.nextMinus();
-					return max;
+					break;
 				}				
 			}
-			// 最も評価の高かった手を採用する。
-			best_[depth] = move[i];
 		}
 	}
 
 	self.nextMinus();
 
 	// 最大でも評価値はmaxまでしか行かない
-	TT.store(key, max, remain_depth, best_[depth], BOUND_EXACT, self.player(), my_remain_time, self.ojama() - enemy.ojama());
-	return max;
+	tte->save(key, best_[depth].get(), max, remain_depth, TT.generation(),
+		max < beta ? BOUND_EXACT : BOUND_LOWER, self.player(), my_remain_time, self.ojama() - enemy.ojama());
 
+	return max;
 }
 
 Score AI::evaluateEX(LightField &self, LightField &enemy, int depth, int my_remain_time)
@@ -452,96 +425,10 @@ Score AI::evaluateEX(LightField &self, LightField &enemy, int depth, int my_rema
 
 	Score score = self.evaluate(enemy, my_remain_time);
 
-	if (score >= SCORE_WIN)
-		score = SCORE_WIN;
-	else if (score <= SCORE_LOSE)
-		score = SCORE_LOSE;
+	if (score >= SCORE_MATE)
+		score = SCORE_MATE;
+	else if (score <= -SCORE_MATE)
+		score = -SCORE_MATE;
 
 	return score;
-}
-
-// pv構築する。置換表からpvを得るので置換表をprobeしている。表示情報を得る以外のメリットはないかもしれない。
-void RootMove::extractPvFromTT(LightField self, LightField enemy, int remain_time)
-{
-	int ply = 0;
-	Move m = pv_[0];
-	Flag player = self.player();
-	const Flag selfplayer = player;
-	const Flag enemyplayer = enemy.player();
-	const TTEntry* tte;
-	pv_.clear();
-	pv_.push_back(m);
-	player_.clear();
-	player_.push_back(player);
-	assert(self.examine());
-	assert(enemy.examine());
-	assert(m.isLegalAbout(self));
-	assert(m.isLegal(self));
-	self.nextPlus();
-	remain_time -= self.doMoveEX(m, remain_time, enemy);
-
-	if (remain_time > 0)
-		tte = TT.probe(self, enemy);
-	else
-		tte = TT.probe(enemy, self);
-
-	assert(tte != nullptr);
-
-	m = tte->move();
-	player = tte->player();
-
-	if (m.isNone())
-	{
-		pv_.push_back(Move::moveNone());
-		return;
-	}
-
-	assert(m.isLegal(player == selfplayer ? self : enemy));
-	assert(m.isLegalAbout(player == selfplayer ? self : enemy));
-
-	do{
-		pv_.push_back(m);
-		player_.push_back(player);
-
-		if (player == selfplayer)
-		{
-			self.nextPlus();
-			remain_time -= self.doMoveEX(m, remain_time, enemy);
-
-			if (remain_time > 0)
-				tte = TT.probe(self, enemy);
-			else 
-				tte = TT.probe(enemy, self);
-		}
-		else
-		{
-			enemy.nextPlus();
-			remain_time += enemy.doMoveEX(m, -remain_time, self);
-
-			if (remain_time < 0)
-				tte = TT.probe(enemy, self);
-			else
-				tte = TT.probe(self, enemy);				
-		}
-
-		assert(self.examine());
-		assert(enemy.examine());
-
-		if (tte != nullptr)
-		{
-			m = tte->move();
-			player = tte->player();
-			if (!m.isNone())
-			{
-				Key key = self.key() ^ enemy.key();
-				assert(m.isLegalAbout(player == selfplayer ? self : enemy));
-				assert(m.isLegal(player == selfplayer ? self : enemy));
-			}
-		}
-	} while (tte != nullptr 
-		&& !m.isNone() // 評価値だけ登録されている場合もある。
-		&& m.isLegal(player == selfplayer ? self : enemy)
-		&& m.isLegalAbout(player == selfplayer ? self : enemy));
-
-	pv_.push_back(Move::moveNone());
 }

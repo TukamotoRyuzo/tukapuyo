@@ -4,8 +4,7 @@
 #include "move.h"
 #include "search.h"
 
-enum NodeType { ROOT, PV, NO_PV, SPLITPOINT_ROOT, SPLITPOINT_PV, SPLITPOINT_NO_PV };
-
+enum NodeType;
 // Šî–{‚Æ‚È‚éAIƒNƒ‰ƒX
 class AI
 {

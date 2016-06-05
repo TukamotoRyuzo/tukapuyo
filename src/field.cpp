@@ -1509,7 +1509,7 @@ int Field::generateStaticState(Field& enemy)
 		{
 			count++;
 
-			if (!procedure(enemy, NULL))
+			if (!procedure(enemy))
 				return -1;
 		}
 		clearFlag(STATIC_MAKING);
