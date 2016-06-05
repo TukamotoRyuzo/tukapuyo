@@ -52,7 +52,7 @@ void ChainTable::clear()
 }
 
 // 置換表からkeyに一致するエントリーへのポインタを返す．
-const ChainEntry* ChainTable::probe(const uint64_t key) const 
+const ChainEntry* ChainTable::probe(const Key key) const 
 {
 	const ChainEntry* chain_entry = firstEntry(key);
 	const uint32_t key32 = key >> 32;
@@ -68,7 +68,7 @@ const ChainEntry* ChainTable::probe(const uint64_t key) const
 }
 
 // 置換表にエントリーを登録する．
-void ChainTable::store(const uint64_t key, const uint64_t after_key, const ChainElement& ce, const Bitboard& bb)
+void ChainTable::store(const Key key, const uint64_t after_key, const ChainElement& ce, const Bitboard& bb)
 {
 	ChainEntry *chain_entry, *replace;
 

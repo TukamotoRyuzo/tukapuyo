@@ -36,7 +36,7 @@ public:
 	int scoreMax() const { return score_max_; }
 	int chainMax() const { return chain_max_; }
 	int chain() const { return chain_; }
-	uint64_t key() const { return hash_key_; }
+	Key key() const { return hash_key_; }
 	Tumo getDepthTumo(const int depth) const { return tumo_pool_[(tumoIndex() + depth) & 127]; }
 	Tumo getTumo(const int id) const { return tumo_pool_[id]; }
 	Tumo getNowTumo() const { return getTumo(tumoIndex()); }
@@ -111,7 +111,7 @@ public:
 	int doMoveEX(const Move& move, int my_remain_time, LightField& enemy);
 	void undoMove(const Move& move, int *con_prev);
 	void undoMove(const Move& move);
-	uint64_t keyInit();
+	Key keyInit();
 	Score evaluate(LightField& enemy, int remain_time);
 
 	Score maxChainsScore(const int ply_max, const int remain_time);
@@ -185,7 +185,7 @@ protected:
 	int chain_;
 
 	// 局面のハッシュ値
-	uint64_t hash_key_;
+	Key hash_key_;
 	
 	// field上にあるおじゃまぷよ以外のぷよの数と，おじゃまぷよの数
 	int field_puyo_num_, field_ojama_num_;

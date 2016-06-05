@@ -17,7 +17,7 @@ Score LightField::maxChainsScore(const int ply_max, const int remain_time)
 	chainsList()->clear();
 	chainsList()->push_back(Chains(0, 0, 0));
 
-	const uint64_t key = this->key();
+	const Key key = this->key();
 	ChainsInfo* entry = CIT[key];
 	Score score;
 
@@ -122,7 +122,7 @@ Score LightField::searchChains(const int ply_max, int ply)
 	nextPlus();
 
 	// for debug
-	const uint64_t w_key = key();
+	const Key w_key = key();
 
 	for (int i = 0; i < movenum; i++)
 	{
@@ -354,7 +354,7 @@ Score LightField::colorHelper(const int help_max, int help_num)
 			hash_key_ ^= hash_->seed(sq, c);
 
 			Score s;
-			const uint64_t key = this->key() + remain_help;
+			const Key key = this->key() + remain_help;
 
 			// 局面表を見て探索済みなら値を得てcontinue.
 			EvaluateHashEntry entry = *ET[key];
@@ -396,7 +396,7 @@ Score LightField::colorHelper(const int help_max, int help_num)
 
 int LightField::examine() const // Fieldの整合性をチェックする
 {
-	uint64_t hash_key_w = 0;
+	Key hash_key_w = 0;
 	int con_w[3] = { 0, 0, 0 };
 	Bitboard bb_same(0, 0);
 	int tumo_num = 0, obstacle_num = 0, pos_bonus = 0;
@@ -903,7 +903,7 @@ void LightField::offseting(LightField& enemy)
 
 // 局面のハッシュ値のセット。
 // 差分計算はせず、ここで一気にやる。
-uint64_t LightField::keyInit()
+Key LightField::keyInit()
 {
 	hash_key_ = 0;
 
@@ -1042,7 +1042,7 @@ void LightField::setConnectRecul()
 bool LightField::deleteMin()
 {
 	// この局面のキー
-	const uint64_t key = this->key();
+	const Key key = this->key();
 
 	// 連鎖テーブルから既に調べた形ではないかを調べる。
 	const ChainEntry* chain_entry = CT.probe(key);
@@ -1202,7 +1202,7 @@ Score LightField::deleteScore()
 	chain_called++;
 
 	// この局面のキー
-	const uint64_t key = this->key();
+	const Key key = this->key();
 
 	// 連鎖テーブルから既に調べた形ではないかを調べる。
 	const ChainEntry* chain_entry = CT.probe(key);
@@ -1278,7 +1278,7 @@ Score LightField::deleteScore()
 Score LightField::deleteScoreDestroy()
 {
 	// この局面のキー
-	const uint64_t key = this->key();
+	const Key key = this->key();
 
 	// 連鎖テーブルから既に調べた形ではないかを調べる。
 	const ChainEntry* chain_entry = CT.probe(key);

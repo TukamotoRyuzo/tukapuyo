@@ -260,7 +260,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	// ‹Ç–Ê•\‚ğŒ©‚é
 	Move tt_move, best_move;
 	Score tt_score;
-	uint64_t key = self.key() ^ enemy.key();
+	Key key = self.key() ^ enemy.key();
 	const TTEntry *tte = TT.probe(self, enemy);
 
 	// ‹Ç–Ê•\‚Ìw‚µè
@@ -533,7 +533,7 @@ void RootMove::extractPvFromTT(LightField self, LightField enemy, int remain_tim
 			player = tte->player();
 			if (!m.isNone())
 			{
-				uint64_t key = self.key() ^ enemy.key();
+				Key key = self.key() ^ enemy.key();
 				assert(m.isLegalAbout(player == selfplayer ? self : enemy));
 				assert(m.isLegal(player == selfplayer ? self : enemy));
 			}

@@ -81,7 +81,7 @@ public:
 	// 置換表を調べる。置換表のエントリーへのポインター(TTEntry*)が返る。  
 	// エントリーが登録されていなければNULLが返る。
 	const TTEntry* probe(const LightField& self, const LightField& enemy) const;
-	const TTEntry* probe(const uint64_t key) const;
+	const TTEntry* probe(const Key key) const;
 
 	// 置換表を新しい探索のために掃除する。(generation_を進める)
 	void newSearch() { ++generation_; }
@@ -89,7 +89,7 @@ public:
 	// TranspositionTable::first_entry()は、与えられた局面(のハッシュキー)に該当する  
 	// 置換表上のclusterの最初のエントリーへのポインターを返す。  
 	// 引数として渡されたkey(ハッシュキー)の下位ビットがclusterへのindexとして使われる。
-	TTEntry* firstEntry(const uint64_t key) const;
+	TTEntry* firstEntry(const Key key) const;
 
 	// TranspositionTable::set_size()は、置換表のサイズをMB(メガバイト)単位で設定する。  
 	// 置換表は2の累乗のclusterで構成されており、それぞれのclusterはTTEnteryのCLUSTER_SIZEで決まる。  
@@ -117,7 +117,7 @@ public:
 	// 	BOUND_LOWER →　fail-low  
 	// 	BOUND_UPPER →	fail-high  
 	// 	BOUND_EXACT →　正確なスコア  
-	void store(const uint64_t key, int16_t score, uint8_t depth, Move move, 
+	void store(const Key key, int16_t score, uint8_t depth, Move move, 
 		Bound bound, uint8_t player, int16_t remain_time, int16_t ojama);
 
 private:
@@ -147,7 +147,7 @@ extern TranspositionTable TT;
 // TranspositionTable::first_entry()は、与えられた局面(のハッシュキー)に該当する
 // 置換表上のclusterの最初のエントリーへのポインターを返す。
 // 引数として渡されたkey(ハッシュキー)の下位ビットがclusterへのindexとして使われる。
-inline TTEntry* TranspositionTable::firstEntry(const uint64_t key) const {
+inline TTEntry* TranspositionTable::firstEntry(const Key key) const {
 
 	return table_ + ((uint32_t)key & hash_mask_);
 }
@@ -165,7 +165,7 @@ template <typename T, size_t Size>
 struct HashTable 
 {
 	HashTable() : entries_(Size, T()) {}
-	T* operator [] (const uint64_t k) { return &entries_[static_cast<size_t>(k) & (Size - 1)]; }
+	T* operator [] (const Key k) { return &entries_[static_cast<size_t>(k) & (Size - 1)]; }
 	void clear() { std::fill(std::begin(entries_), std::end(entries_), T()); }
 	// Size が 2のべき乗であることのチェック
 	static_assert((Size & (Size - 1)) == 0, "");
@@ -196,16 +196,16 @@ struct EvaluateHashEntry
 	Score score() const { return static_cast<Score>(static_cast<int64_t>(word & 0x1fffffffffffffffULL) >> 32); }
 	int remainHelp() const { return static_cast<int>(word >> 61);}
 
-	void save(const uint64_t k, const Score s, const int remain_help) 
+	void save(const Key k, const Score s, const int remain_help) 
 	{
 		// scoreの29～31ビット目が1になることは想定していない．またスコアがマイナスになることも想定していない．
 		assert(!(s & 0xe0000000) && s >= 0);
-		word = static_cast<uint64_t>(k >> 32) 
-			 | static_cast<uint64_t>(static_cast<int64_t>(s) << 32)
-			 | static_cast<uint64_t>(remain_help) << 61;
+		word = static_cast<Key>(k >> 32) 
+			 | static_cast<Key>(static_cast<int64_t>(s) << 32)
+			 | static_cast<Key>(remain_help) << 61;
 	}
 
-	uint64_t word;
+	Key word;
 };
 
 struct EvaluateHashTable : HashTable<EvaluateHashEntry, EvaluateTableSize> {};
@@ -213,7 +213,7 @@ struct EvaluateHashTable : HashTable<EvaluateHashEntry, EvaluateTableSize> {};
 // フィールドの連鎖情報
 struct ChainsInfo
 {
-	void save(const uint64_t k, const Score s, const ChainsList* pcl)
+	void save(const Key k, const Score s, const ChainsList* pcl)
 	{
 		key = k >> 32;
 		max_score = s;

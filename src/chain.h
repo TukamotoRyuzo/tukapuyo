@@ -80,10 +80,10 @@ struct ChainEntry
 	uint32_t key() const { return key_; }
 	const ChainElement* chainElement() const { return ce_.ref(); }
 	Bitboard bbDelete() const { return bb_delete_; }
-	uint64_t afterKey() const { return after_key_; }
+	Key afterKey() const { return after_key_; }
 
 	// setter
-	void save(uint32_t key, uint64_t after_key, const ChainElement& ce, const Bitboard& bb)
+	void save(uint32_t key, Key after_key, const ChainElement& ce, const Bitboard& bb)
 	{
 		key_ = key;
 		after_key_ = after_key;
@@ -96,7 +96,7 @@ private:
 	Bitboard bb_delete_;
 
 	// 消えた後の局面のハッシュキー
-	uint64_t after_key_;
+	Key after_key_;
 
 	// この局面のハッシュキーの上位32ビット
 	uint32_t key_;
@@ -110,9 +110,9 @@ class ChainTable
 	static const unsigned CLUSTER_SIZE = 2;
 public:
 	~ChainTable() { free(mem_); }
-	const ChainEntry* probe(const uint64_t key) const ;
-	void store(const uint64_t key, uint64_t after_key, const ChainElement& ce, const Bitboard& bb);
-	ChainEntry* firstEntry(const uint64_t key) const;
+	const ChainEntry* probe(const Key key) const ;
+	void store(const Key key, Key after_key, const ChainElement& ce, const Bitboard& bb);
+	ChainEntry* firstEntry(const Key key) const;
 	void setSize(size_t mb_size);
 	void clear();
 private:
@@ -122,7 +122,7 @@ private:
 	void* mem_;
 };
 
-inline ChainEntry* ChainTable::firstEntry(const uint64_t key) const {
+inline ChainEntry* ChainTable::firstEntry(const Key key) const {
 
 	return table_ + ((uint32_t)key & hash_mask_);
 }

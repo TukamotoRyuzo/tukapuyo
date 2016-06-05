@@ -5,6 +5,7 @@
 #include <cassert>
 #include <string>
 
+typedef uint64_t Key;
 const int TUMO_MAX = 128;
 
 enum Square

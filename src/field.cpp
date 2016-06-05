@@ -1088,7 +1088,7 @@ bool Field::procedure(Field &enemy, Operate *ope)
 					// この処理はゲームには関係ない。大連鎖のログを残す処理
 					Field f(*this);
 
-					//uint64_t w_key = f.key();
+					//Key w_key = f.key();
 					f.keyInit();
 
 					//assert(w_key == f.key());

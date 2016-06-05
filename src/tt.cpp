@@ -2,11 +2,11 @@
 #include"bitop.h"
 #include <iostream>
 
-
 // 置換表はグローバルに配置
 TranspositionTable TT; 
 EvaluateHashTable ET;
 ChainsInfoTable CIT;
+
 // TranspositionTable::set_size()は、置換表のサイズをMB(メガバイト)単位で設定する。
 // 置換表は2の累乗のclusterで構成されており、それぞれのclusterはTTEnteryのCLUSTER_SIZEで決まる。
 // (1つのClusterは、TTEntry::CLUSTER_SIZE×16バイト)
@@ -63,7 +63,7 @@ void TranspositionTable::clear()
 }
 // 置換表を調べる。置換表のエントリーへのポインター(TTEntry*)が返る。
 // エントリーが登録されていなければNULLが返る
-const TTEntry* TranspositionTable::probe(const uint64_t key) const
+const TTEntry* TranspositionTable::probe(const Key key) const
 {
 	// 最初のエントリーを取得
 	const TTEntry* tte = firstEntry(key);
@@ -87,7 +87,7 @@ const TTEntry* TranspositionTable::probe(const uint64_t key) const
 // エントリーが登録されていなければNULLが返る
 const TTEntry* TranspositionTable::probe(const LightField& self, const LightField& enemy) const
 {
-	uint64_t key = self.key() ^ enemy.key();
+	Key key = self.key() ^ enemy.key();
 
 	// 最初のエントリーを取得
 	const TTEntry* tte = firstEntry(key);
@@ -138,7 +138,7 @@ const TTEntry* TranspositionTable::probe(const LightField& self, const LightFiel
 // m : 最善手
 // statV : 静的評価(この局面で評価関数を呼び出して得た値)
 
-void TranspositionTable::store(const uint64_t key, int16_t score, uint8_t depth, Move move, Bound bound, uint8_t player,
+void TranspositionTable::store(const Key key, int16_t score, uint8_t depth, Move move, Bound bound, uint8_t player,
 							   int16_t remain_time, int16_t ojama)
 {
 	TTEntry *tte, *replace;
