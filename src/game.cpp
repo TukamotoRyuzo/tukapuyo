@@ -160,7 +160,7 @@ GameResult Game::playLoop(const GameMode mode)
 			f1->setChains(s);
 			LightField f(*f1);
 			color_searched = allready_searched = chain_called = chain_hit = 0;
-			TimeCounter tm;
+			HighPrecisionTimer tm;
 			tm.begin();
 			Score ss = f1->colorHelper(2);
 			tm.end();
@@ -188,7 +188,7 @@ GameResult Game::playLoop(const GameMode mode)
 			df1.chainsList()->push_back(Chains(0, 0, 0));
 			df2.chainsList()->push_back(Chains(0, 0, 0));
 			const int i = df2.generateStaticState(df1);
-			TimeCounter tc;
+			HighPrecisionTimer tc;
 			tc.begin();
 			const Score s = df1.evaluate(df2, i);
 			tc.end();
@@ -250,7 +250,7 @@ GameResult Game::playLoop(const GameMode mode)
 				chain_hit = 0;
 				chain_called = 0;
 				node_searched = 0;
-				TimeCounter tm;
+				HighPrecisionTimer tm;
 				tm.begin();
 				int score = 0;
 

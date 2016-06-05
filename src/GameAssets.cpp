@@ -41,17 +41,6 @@ void GameAssets::menuFinal()
 
 void GameAssets::gameInit()
 {
-
-#ifdef USE_LEAPMOTION
-	// ジェスチャーを有効にする
-	controller.enableGesture(Leap::Gesture::Type::TYPE_CIRCLE);
-
-	// 設定を変える
-	controller.config().setFloat("Gesture.Circle.MinRadius", 5.0);
-	controller.config().setFloat("Gesture.Circle.MinArc", 3.14);
-	controller.config().save();
-#endif
-
 	// 背景画像
 	field.load(".\\png\\Tsu Background 10\\field.png",false);
 	field.setPosition(0, 0);
@@ -86,6 +75,7 @@ void GameAssets::gameInit()
 
 	// やった
 	yatta.load(".\\png\\Tsu Background 10\\win.png", true);
+
 	// ばたんきゅ～
 	batankyuu.load(".\\png\\Tsu Background 10\\lose.png", true);
 
@@ -94,7 +84,6 @@ void GameAssets::gameInit()
 	drop.load(".\\effect\\Tsu\\drop.ogg");
 	decide.load(".\\effect\\Tsu\\decide.ogg");
 	bgm_battle.load(".\\bgm\\Puyo Puyo 2\\Area A (MD).ogg");
-	bgm_arrange.load(".\\bgm\\bgm_arrange.mp3");
 	win.load(".\\voice\\win.wav");
 	lose.load(".\\effect\\Tsu\\lose.ogg");
 	lose_voice.load(".\\voice\\lose.wav");

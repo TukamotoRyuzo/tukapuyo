@@ -598,7 +598,7 @@ int LightField::generateMoves(Move* move) const
 	const Move* begin = move;
 
 	// 3,12‚ª‹l‚Ü‚Á‚Ä‚¢‚é‚Æ‚«‚Í€‚ñ‚Å‚¢‚é‹Ç–Ê
-	if (upper_y_[3] >= RANK_13)
+	if (upper(3) >= RANK_13)
 		return 0;
 
 	int right, left;
@@ -610,7 +610,7 @@ int LightField::generateMoves(Move* move) const
 	for (int x = right; x >= left; x--)
 	{
 		const int up = upper(x);
-		const int up_side = upper_y_[x + 1];
+		const int up_side = upper(x + 1);
 		const Square dest = toSquare(x, up);
 		const Square dest_up = dest + SQ_UP;
 

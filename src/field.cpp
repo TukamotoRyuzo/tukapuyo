@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "bitboard.h"
 #include "chain.h"
+
 // ハッシュの種
 namespace { const Hashseed hash1, hash2; }
 
@@ -1241,8 +1242,10 @@ bool Field::procedure(Field &enemy, Operate *ope)
 
 int Field::processInput(Operate *ope)
 {
+	assert(flag(PLAYER1 | PLAYER2) || ope);
+
 	// 同時に押すことが許されない処理だけ、if-elseifにしている
-	int	procFlag = 0;
+	int	operate_bit = 0;
 	int ret = 0;
 	Tumo n = current();
 	bool b = true;
@@ -1255,116 +1258,47 @@ int Field::processInput(Operate *ope)
 	if (flag(REPLAY_MODE))
 	{
 		if (flag(PLAYER1))
-			procFlag = assets->operate_history_1p.pop();
+			operate_bit = assets->operate_history_1p.pop();
 		else
-			procFlag = assets->operate_history_2p.pop();
+			operate_bit = assets->operate_history_2p.pop();
 	}
 	else
 	{
 		if (flag(PLAYER1))// 1p用
 		{
 			if (flag(PLAYER_AI) || flag(ZURU_MODE))
-				procFlag = ope->pop();
+				operate_bit = ope->pop();
 			else
 			{
-#ifdef USE_LEAPMOTION
-
-				if (true)
-				{
-					auto gestures = assets->controller.frame().gestures();
-
-					for (auto gesture : gestures)
-					{
-						if (gesture.type() == Leap::Gesture::Type::TYPE_CIRCLE)
-						{
-							Leap::CircleGesture circle(gesture);
-
-							auto isClockwise = (circle.pointable().direction().
-								angleTo(circle.normal())) <= (Leap::PI / 2);
-
-							if (isClockwise)
-							{
-								procFlag |= R_ROTATE;
-							}
-							else
-							{
-								procFlag |= L_ROTATE;
-							}
-						}
-					}
-					// 人差し指の情報を取得（右手)
-					for (auto hand : assets->controller.frame().hands())
-					{
-						if (hand.isRight())
-						{
-							Leap::Finger index = hand.fingers().extended().
-								fingerType(Leap::Finger::Type::TYPE_INDEX)[0];
-							if (index.isValid())
-							{
-								auto bone = index.bone(Leap::Bone::Type::TYPE_PROXIMAL);
-								auto bone2 = index.bone(Leap::Bone::Type::TYPE_DISTAL);
-
-								// 基節骨の手のひら側の始点の座標
-								Leap::Vector prox(bone.nextJoint());
-
-								// 指先の座標
-								Leap::Vector dist(bone2.prevJoint());
-								
-								if (prox.x - dist.x < (r_count_ == 0 ? -5 : -8))
-								{
-									// 右向き
-									procFlag |= RIGHT;
-								}
-								else if (prox.x - dist.x > (l_count_ == 0 ? 10 :15))
-								{
-									// 左向き
-									procFlag |= LEFT;
-								}
-								if (prox.y - dist.y > 13)
-								{
-									// 下向き
-									procFlag |= DOWN;
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-#endif
 					// キー入力に応じて処理
-					if (CheckHitKey(KEY_INPUT_LEFT))	procFlag |= LEFT;
-			   else if (CheckHitKey(KEY_INPUT_RIGHT))	procFlag |= RIGHT;
-					if (CheckHitKey(KEY_INPUT_X))		procFlag |= R_ROTATE;
-			   else	if (CheckHitKey(KEY_INPUT_Z))		procFlag |= L_ROTATE;
-			   		if (CheckHitKey(KEY_INPUT_DOWN))	procFlag |= DOWN;
-
-#ifdef USE_LEAPMOTION
-				}
-#endif
+					if (CheckHitKey(KEY_INPUT_LEFT))	operate_bit |= LEFT;
+			   else if (CheckHitKey(KEY_INPUT_RIGHT))	operate_bit |= RIGHT;
+					if (CheckHitKey(KEY_INPUT_X))		operate_bit |= R_ROTATE;
+			   else	if (CheckHitKey(KEY_INPUT_Z))		operate_bit |= L_ROTATE;
+			   		if (CheckHitKey(KEY_INPUT_DOWN))	operate_bit |= DOWN;
 			}
 		}
 		else if (flag(PLAYER2))// 2p用
 		{
 			if (flag(PLAYER_AI))
-				procFlag = ope->pop();
+				operate_bit = ope->pop();
 			else
 			{
-				if (CheckHitKey(KEY_INPUT_A))	procFlag |= LEFT;
-		   else if (CheckHitKey(KEY_INPUT_D))	procFlag |= RIGHT;
-				if (CheckHitKey(KEY_INPUT_G))	procFlag |= R_ROTATE;
-	       else if (CheckHitKey(KEY_INPUT_F))	procFlag |= L_ROTATE;
-				if (CheckHitKey(KEY_INPUT_S))	procFlag |= DOWN;
+				if (CheckHitKey(KEY_INPUT_A))	operate_bit |= LEFT;
+		   else if (CheckHitKey(KEY_INPUT_D))	operate_bit |= RIGHT;
+				if (CheckHitKey(KEY_INPUT_G))	operate_bit |= R_ROTATE;
+	       else if (CheckHitKey(KEY_INPUT_F))	operate_bit |= L_ROTATE;
+				if (CheckHitKey(KEY_INPUT_S))	operate_bit |= DOWN;
 			}
 		}
 
 		// 操作の履歴を取っておく．（リプレイ再生のため）
 		if (flag(PLAYER1))
-			assets->operate_history_1p.push(procFlag);
+			assets->operate_history_1p.push(operate_bit);
 		else
-			assets->operate_history_2p.push(procFlag);
+			assets->operate_history_2p.push(operate_bit);
 	}
-	if (procFlag & LEFT)// もし左ｷｰが押されたら
+	if (operate_bit & LEFT)// もし左ｷｰが押されたら
 	{
 		if (l_count_ == 0 || l_count_ > 1)
 		{
@@ -1383,7 +1317,7 @@ int Field::processInput(Operate *ope)
 		l_count_++;
 		r_count_ = 0;
 	}
-	else if (procFlag & RIGHT)// もし→ｷｰが押されたら
+	else if (operate_bit & RIGHT)// もし→ｷｰが押されたら
 	{
 		if (r_count_ == 0 || r_count_ > 1)
 		{
@@ -1405,7 +1339,7 @@ int Field::processInput(Operate *ope)
 	else
 		r_count_ = l_count_ = 0;
 
-	if (procFlag & R_ROTATE)// 右回転
+	if (operate_bit & R_ROTATE)// 右回転
 	{
 		if (r_rotate_count_ == 0)
 		{
@@ -1472,7 +1406,7 @@ int Field::processInput(Operate *ope)
 		}
 		r_rotate_count_++;
 	}
-	else if (procFlag & L_ROTATE)// 左回転
+	else if (operate_bit & L_ROTATE)// 左回転
 	{
 		if (l_rotate_count_ == 0)
 		{
@@ -1540,7 +1474,7 @@ int Field::processInput(Operate *ope)
 	else
 		r_rotate_count_ = l_rotate_count_ = 0;
 
-	if (procFlag & DOWN)// もし↓ｷｰが押されたら
+	if (operate_bit & DOWN)// もし↓ｷｰが押されたら
 	{
 		ret |= DOWN;// 下に移動するのではなく、一定時間ごとに下に下りていく処理（BlockDown)を呼ぶためにtrueを返すようにしておく
 		down_count_++;

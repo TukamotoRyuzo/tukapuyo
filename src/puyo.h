@@ -4,6 +4,7 @@
 #include "enumoperator.h"
 #include <cassert>
 #include <string>
+
 const int TUMO_MAX = 128;
 
 enum Square
@@ -45,12 +46,8 @@ inline bool isInSquare(const int x, const int y)
 inline Square toSquare(const int x, const int y) { assert(isInSquare(x, y)); return static_cast<Square>(x * 16 + y); }
 inline File toX(const Square sq) { return static_cast<File>(sq >> 4); }
 inline Rank toY(const Square sq) { return static_cast<Rank>(sq & 0x0f); }
+inline bool isInSquare(const Square sq) { return isInSquare(toX(sq), toY(sq)); }
 
-
-inline bool isInSquare(const Square sq)
-{
-	return isInSquare(toX(sq), toY(sq));
-}
 inline std::string squareToStr(const Square sq)
 {
 	const char x = 'A' + toX(sq) - 1;
@@ -86,7 +83,8 @@ enum Rotate { ROTATE_UP, ROTATE_RIGHT, ROTATE_DOWN, ROTATE_LEFT, ROTATE_MAX };
 ENABLE_OPERATORS_ON(Rotate);
 
 const int ROTATE_SQUARE[4] = { 1, 16, -1, -16 };
-const int LSB_SQUARE[16] = { 0, 1, 16, 1, -1, 1, 16, 1, -16, 1, 16, 1, -1, 1, 16, 1};
+const int LSB_SQUARE[16] = { 0, 1, 16, 1, -1, 1, 16, 1, -16, 1, 16, 1, -1, 1, 16, 1 };
+
 inline Square rotatePosition(const Rotate r) { assert(r >= ROTATE_UP && r <= ROTATE_LEFT); return static_cast<Square>(ROTATE_SQUARE[r]); }
 
 enum Connect
@@ -97,6 +95,7 @@ enum Connect
 	CON_DOWN  = 1 << ROTATE_DOWN,
 	CON_LEFT  = 1 << ROTATE_LEFT,
 };
+
 inline Square lsbToPosition(const Connect c) { return static_cast<Square>(LSB_SQUARE[c]); }
 
 ENABLE_OPERATORS_ON(Connect);

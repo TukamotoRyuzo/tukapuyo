@@ -1,4 +1,3 @@
-#include <ctime>
 #include "GameAssets.h"
 #include "gamemode.h"
 
@@ -10,9 +9,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// ‚c‚wƒ‰ƒCƒuƒ‰ƒŠ‰Šú‰»ˆ—
 	if (DxLib_Init() == -1) 
 		return -1;
-
-	srand((unsigned int)time(NULL));
-	//srand((unsigned int)24);
 
 	// •`‰ææ‚ğ— ‰æ–Ê‚É
 	SetDrawScreen(DX_SCREEN_BACK);

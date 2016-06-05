@@ -22,10 +22,6 @@ struct GameAssets
 	void menuInit();
 	void menuFinal();
 
-#ifdef USE_LEAPMOTION
-	Leap::Controller controller;
-#endif
-
 	// ÉQÅ[ÉÄÇ≈égóp
 	Graph field, border, tumo, choose, ojamapuyo, yatta, batankyuu, zenkesi,
 		score_all, score_all2, chain_all, yokoku[6], score_1p[10], score_2p[10], 

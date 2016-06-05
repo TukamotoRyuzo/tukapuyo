@@ -1,16 +1,12 @@
 #pragma once
 
 #include <string>
-// リープモーションを使う場合
-// #define USE_LEAPMOTION
-#ifdef USE_LEAPMOTION
-#include"Leap.h"
-#endif
 
 std::string nameboad();
 
 struct GameAssets;
 enum GameMode;
+
 namespace MainMenu
 {
 	void init(GameAssets* s);
