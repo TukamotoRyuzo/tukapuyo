@@ -48,7 +48,7 @@ protected:
 
 	Move best_[10];
 
-	std::vector<RootMove> root_moves;
+	std::vector<Search::RootMove> root_moves;
 	Operate operate_;
 	int continue_self_num_;
 	unsigned char easy_;

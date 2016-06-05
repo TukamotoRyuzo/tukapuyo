@@ -3,6 +3,7 @@
 #include "bitboard.h"
 #include "chain.h"
 #include "tt.h"
+
 Color LightField::use_color_[4];
 
 //#define DEBUG
@@ -1653,6 +1654,7 @@ bool LightField::isEmpty()
 
 	return true;
 }
+
 bool LightField::isAllClear() const
 {
 	for (int x = 1; x <= 6; x++)

@@ -46,6 +46,8 @@ enum Score
 	SCORE_MIN = -999999,
 };
 ENABLE_OPERATORS_ON(Score);
+
+
 enum 
 {
 	// PLAYER1のフィールドの左上のx,y座標

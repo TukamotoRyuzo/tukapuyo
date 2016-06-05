@@ -1,12 +1,13 @@
 #pragma once
 
-#include "platform.h"
-#include "field.h"
 #include <vector>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
 #include <thread>
+#include "platform.h"
+#include "field.h"
+#include "search.h"
 
 const int MAX_THREADS = 64;
 typedef std::mutex Mutex;
@@ -16,7 +17,7 @@ struct Thread
 {
 	Thread();
 	virtual ~Thread();
-	//virtual void search();
+	virtual void search();
 	void idleLoop();
 
 	// bがtrueになるまで待つ
@@ -35,9 +36,9 @@ struct Thread
 	// このスレッドのsearchingフラグがfalseになるのを待つ。(MainThreadがslaveの探索が終了するのを待機するのに使う)
 	void join() { waitWhile(searching); }
 
-	//Board root_board;
-	//std::vector<Search::RootMove> root_moves;
-	//Depth root_depth, completed_depth;
+	LightField root_field_self, root_field_enemy;
+	std::vector<Search::RootMove> root_moves;
+	Depth root_depth, completed_depth;
 
 	// calls_count : この変数を++した回数でcheckTime()を呼び出すかどうかを判定する.
 	int max_ply, calls_count;
@@ -61,7 +62,7 @@ protected:
 
 struct MainThread : public Thread
 {
-	//virtual void search();
+	virtual void search();
 
 	bool failed_low;
 	double best_move_changes;

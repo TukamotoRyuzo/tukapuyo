@@ -8,8 +8,6 @@
 #include <cmath>
 #include "chain.h"
 
-enum NodeType { ROOT, PV, NO_PV };
-
 // レベルを設定する．
 void PolytecAI::setLevel(int level)
 {
@@ -111,8 +109,8 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 
 	for (int i = 0; i < mcount; ++i)
 	{
-		root_moves.push_back(RootMove(mlist[i]));
-		root_moves[i].player_.push_back(self.player());
+		root_moves.push_back(Search:: RootMove(mlist[i]));
+		root_moves[i].player.push_back(self.player());
 	}
 	
 	// aspiration searchでfail low / fail highを起こした回数．これが少なくてしかも小さいdeltaであればよい
@@ -125,15 +123,15 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 		{
 			// 前回のiterationでの指し手の点数をすべてコピー
 			for (int i = 0; i < root_moves.size(); ++i)
-				root_moves[i].prev_score_ = root_moves[i].score_;
+				root_moves[i].previous_score = root_moves[i].score;
 
 			// aspiration search
 			// alpha betaをある程度絞ることで、探索効率を上げる。
-			if (3 <= depth_max_ && abs(root_moves[0].prev_score_) < SCORE_INFINITE)
+			if (3 <= depth_max_ && abs(root_moves[0].previous_score) < SCORE_INFINITE)
 			{
 				delta = static_cast<Score>(5);
-				alpha = static_cast<Score>(root_moves[0].prev_score_) - delta;
-				beta = static_cast<Score>(root_moves[0].prev_score_) + delta;
+				alpha = static_cast<Score>(root_moves[0].previous_score) - delta;
+				beta = static_cast<Score>(root_moves[0].previous_score) + delta;
 			}
 			else
 			{
@@ -191,9 +189,9 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 			int e_field_ply = 0;
 
 			// pv表示
-			for (int size = 0; size < root_moves[0].pv_.size() - 1; size++)
+			for (int size = 0; size < root_moves[0].pv.size() - 1; size++)
 			{
-				LightField* now_player = root_moves[0].player_[size] == self.player() ? &self : &enemy;
+				LightField* now_player = root_moves[0].player[size] == self.player() ? &self : &enemy;
 
 				int now_field_ply;
 
@@ -203,8 +201,8 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 					now_field_ply = e_field_ply++;
 				
 				MyOutputDebugString("%s%s,",
-					root_moves[0].player_[size] == PLAYER1 ? "P1:" : "P2:",
-					root_moves[0].pv_[size].toString(*now_player, now_field_ply).c_str());
+					root_moves[0].player[size] == PLAYER1 ? "P1:" : "P2:",
+					root_moves[0].pv[size].toString(*now_player, now_field_ply).c_str());
 			}
 			MyOutputDebugString("\n");			
 		}
@@ -253,7 +251,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		if (depth_max_ == 1)
 			tt_move = tt_hit ? tte->move() : Move::moveNone();
 		else
-			tt_move = root_moves[0].pv_[0];
+			tt_move = root_moves[0].pv[0];
 	}
 	else
 		tt_move = tt_hit ? tte->move() : Move::moveNone();
@@ -369,11 +367,11 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 			// Root nodeでの指し手のなかから、いま探索したばかりの指し手に関してそれがどこにあるかをfind()で探し、
 			// この指し手に付随するPV(最善応手列)を置換表から取り出して更新しておく。
 			// このfind()が失敗することは想定していない。
-			RootMove& rm = *std::find(root_moves.begin(), root_moves.end(), move[i]);
+			Search:: RootMove& rm = *std::find(root_moves.begin(), root_moves.end(), move[i]);
 
 			if (score > alpha)
 			{
-				rm.score_ = score;
+				rm.score = score;
 
 				// 局面表をprobeするときにツモ番号を元に戻す必要があるので。
 				/*self.nextMinus();
@@ -386,7 +384,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 				// ここにくるということはtt_moveが2回調べられているということ。
 				if (move[i] != tt_move)
 				{
-					rm.score_ = -SCORE_INFINITE;
+					rm.score = -SCORE_INFINITE;
 				}
 			}
 		}

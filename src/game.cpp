@@ -568,6 +568,7 @@ void Game::fadeIn()
 		fase = BORDER_APPEAR;
 	}
 }
+
 void Game::borderAppear()
 {
 	static int i = 0;
@@ -597,6 +598,7 @@ void Game::borderAppear()
 		assets->drop.changeFreq(-1);
 	}
 }
+
 void Game::levelSelect()
 {
 	static const int x = assets->choose.getUpperLeft().x;
@@ -676,6 +678,7 @@ void Game::levelSelect()
 	f1->show();
 	f2->show();
 }
+
 void Game::borderDisappear()
 {
 	// レベル選択の枠を少しずつ閉じる
@@ -692,6 +695,7 @@ void Game::borderDisappear()
 		i = 5;
 	}
 }
+
 void Game::playing(GameResult* result, const GameMode mode, int *p1_win, int* p2_win)
 {
 	// ゲーム中にQが押されたらレベル選択に戻る。
@@ -723,6 +727,7 @@ void Game::playing(GameResult* result, const GameMode mode, int *p1_win, int* p2
 		fase = RESULT;
 	}
 }
+
 void Game::gameResult(const GameResult result, const int p1_win, const int p2_win)
 {
 	static int i = 0;

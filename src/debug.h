@@ -53,10 +53,10 @@ private:
 };
 
 // ミリ秒単位の時間を表すクラス
-class Time
+class Timer
 {
 public:
-    Time() { restart(); }
+    Timer() { restart(); }
 
 	// 計測開始時間を保存
     void restart() { start_ = timeGetTime(); }
