@@ -88,7 +88,9 @@ public:
 	~TranspositionTable() { free(mem_); }
 	void newSearch() { ++generation8_; }
 	uint8_t generation() const { return generation8_; }
-	bool probe(const LightField& self, const LightField& enemy, TTEntry* &ptt) const;
+
+	template <bool OnePlayer>
+	bool probe(const LightField* self, const LightField* enemy, TTEntry* &ptt) const;
 	void resize(size_t mb_size);
 	void clear() { memset(table_, 0, cluster_count_ * sizeof(Cluster)); generation8_ = 0; }
 	TTEntry* firstEntry(const Key key) const { return &table_[(size_t)key & (cluster_count_ - 1)].entry[0]; }

@@ -243,7 +243,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	Score tt_score;
 	TTEntry* tte;
 	const Key key = self.key() ^ enemy.key();
-	const bool tt_hit = TT.probe(self, enemy, tte);
+	const bool tt_hit = TT.probe<false>(&self, &enemy, tte);
 
 	// ‹Ç–Ê•\‚ÌŽw‚µŽè
 	if (rootnode)

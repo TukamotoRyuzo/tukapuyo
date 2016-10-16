@@ -2,7 +2,8 @@
 #include "tt.h"
 #include <cassert>
 #include <algorithm>
-//#define HASH
+#define HASH
+#define DEBUG
 unsigned int hash_hit;
 
 int AI::thinkWrapper(const Field &self, const Field &enemy)
@@ -14,6 +15,7 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 		// ˜A½‚ª‹N‚±‚è‚«‚é‚Ü‚Å‚ÌŽžŠÔ‚ÆŽv‚¦‚Î‚æ‚¢
 		timeLimit = (enemy.chainMax() - enemy.chain()) * (CHAINTIME + FALLTIME);
 	}
+
 	LightField s(self);
 	LightField e(enemy);
 
@@ -49,14 +51,15 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 {
 #ifdef HASH
 	const int remain_depth = depth_max_ - depth;
+	TTEntry *tte;
 
 	// “¯ˆê‹Ç–Ê‚ª”­¶‚·‚é‚Ì‚Í2Žè–ÚˆÈ~‚µ‚©‚ ‚è‚¦‚È‚¢B
 	if (depth >= 2)
 	{
-		const TTEntry *tte = TT.probe(self.key());
+		bool tt_hit = TT.probe<true>(&self, nullptr, tte);
 
 		// ‹Ç–Ê‚ª“o˜^‚³‚ê‚Ä‚¢‚½
-		if (tte)
+		if (tt_hit)
 		{
 			// ‹Ç–Ê•\‚É“o˜^‚³‚ê‚Ä‚¢‚é‹Ç–Ê‚ªAŒ»Ý‚Ì‹Ç–Ê‚ÌŽc‚è[‚³ˆÈã
 			if (tte->depth() >= remain_depth)
@@ -85,17 +88,19 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		if ((movenum = self.generateMoves(move)) == 0)
 			return -SCORE_INFINITE;
 		
+		self.nextPlus();
+
 #if defined(DEBUG)
 		LightField f = self;// debug
 #endif
-
-		self.nextPlus();
-
 		for (int i = 0; i < movenum; i++)
 		{
+			Key selfkey = self.key();
+
 			// generateMoves‚Å‚à‚Æ‚ß‚½êŠ‚É‚¨‚¢‚Ä‚Ý‚é
 			self.doMove<true>(move[i]);
 			assert(self.key() == self.keyInit());
+
 			// Ý’u‚É‚©‚©‚éŽžŠÔ‚ðŒvŽZ
 			// —Ž‰º‚É‚©‚©‚éŽžŠÔ‚ÍA13 - Ý’uˆÊ’u‚Ìy‚Ì¬‚³‚¢‚Ù‚¤ ‚¿‚¬‚è‚È‚çA—]Œv‚ÉŽžŠÔ‚ª‚©‚©‚é
 			int takeTime = (13 - std::min(toY(move[i].csq()), toY(move[i].psq()))) * FALLTIME + (move[i].isTigiri() ? TAKETIME_INCLUDETIGIRI : TAKETIME);
@@ -127,7 +132,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 				best_[depth] = move[i];// ‚à‚Á‚Æ‚à•]‰¿‚Ì‚‚¢Žè‚ð‘I‚Ô
 			}
 
-#if defined(DEBUG)
+#if defined DEBUG
 			assert(self == f); // debug::‚«‚¿‚ñ‚Æ‚à‚Æ‚Ì‹Ç–Ê‚É–ß‚¹‚Ä‚¢‚é‚©
 #endif
 		}
@@ -135,8 +140,11 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		self.nextMinus();
 
 #ifdef HASH
-		// ‚±‚Ì’Tõ‚Å‚ÍŒã‚ë“ñ‚Â‚Ìˆø”‚ÍŽg‚í‚È‚¢
-		TT.store(self.key(), max, remain_depth, best_[depth], BOUND_EXACT, 0, 0, 0);
+		if (depth >= 2)
+		{
+			// ‚±‚Ì’Tõ‚Å‚ÍŒã‚ë“ñ‚Â‚Ìˆø”‚ÍŽg‚í‚È‚¢
+			tte->save(self.key(), best_[depth].get(), max, remain_depth, TT.generation(), BOUND_EXACT, 0, 0, 0);
+		}
 #endif
 		return max;
 	}

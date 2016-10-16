@@ -8,10 +8,6 @@ EvaluateHashTable ET;
 ChainsInfoTable CIT;
 
 // TranspositionTable::set_size()は、置換表のサイズをMB(メガバイト)単位で設定する。
-// 置換表は2の累乗のclusterで構成されており、それぞれのclusterはTTEnteryのCLUSTER_SIZEで決まる。
-// (1つのClusterは、TTEntry::CLUSTER_SIZE×16バイト)
-// mbSizeはCLUSTER_SIZE[GB]までのようだ。CLUSTER_SIZE = 16だから16GBまで。
-
 void TranspositionTable::resize(size_t mb_size)
 {
 	size_t new_cluster_count = size_t(1) << Bitop::bsr64((mb_size * 1024 * 1024) / sizeof(Cluster));
@@ -38,26 +34,35 @@ void TranspositionTable::resize(size_t mb_size)
 
 // 置換表を調べる。置換表のエントリーへのポインター(TTEntry*)が返る。
 // エントリーが登録されていなければNULLが返る
-bool TranspositionTable::probe(const LightField& self, const LightField& enemy, TTEntry* &ptt) const
+template bool TranspositionTable::probe<true >(const LightField* self, const LightField* enemy, TTEntry* &ptt) const;
+template bool TranspositionTable::probe<false>(const LightField* self, const LightField* enemy, TTEntry* &ptt) const;
+
+template <bool OnePlayer>
+bool TranspositionTable::probe(const LightField* self, const LightField* enemy, TTEntry* &ptt) const
 {
-	Key key = self.key() ^ enemy.key();
+	Key key = OnePlayer ? self->key() : self->key() ^ enemy->key();
 
 	// 最初のエントリーを取得
 	TTEntry* const tte = firstEntry(key);
 	uint32_t key32 = key >> 32;
 
 	for (int i = 0; i < CLUSTER_SIZE; ++i)
-		if (!tte[i].key32_ // 空か、同じ局面が見つかった
-			|| (tte[i].key32_ == key32
-				&& tte->player() == self.player() // 手盤が一致
-				&& tte->ojama() == self.ojama() - enemy.ojama())) // おじゃまぷよの数が一致
+	{
+		// 空か、同じ局面が見つかった
+		if (!tte[i].key32_ || (tte[i].key32_ == key32))
 		{
-			if (tte[i].generation_ != generation8_ && tte[i].key32_)
-				tte[i].generation_ = generation8_; // Refresh
+			if (OnePlayer
+				|| (tte->player() == self->player() // 手盤が一致
+					&& tte->ojama() == self->ojama() - enemy->ojama())) // おじゃまぷよの数が一致
+			{
+				if (tte[i].generation_ != generation8_ && tte[i].key32_)
+					tte[i].generation_ = generation8_; // Refresh
 
-			ptt = &tte[i];
-			return (bool)tte[i].key32_;
+				ptt = &tte[i];
+				return (bool)tte[i].key32_;
+			}
 		}
+	}
 
 	// 見つからなかったら、replaceできるポインタを返す。
 	TTEntry* replace = tte;

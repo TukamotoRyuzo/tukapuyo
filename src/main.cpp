@@ -3,8 +3,11 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	ChangeWindowMode(TRUE);
+	// no output log.txt
+	SetOutApplicationLogValidFlag(FALSE);
 	SetAlwaysRunFlag(TRUE);
+	ChangeWindowMode(TRUE);
+	SetMainWindowText("tukapuyo");
 
 	// ‚c‚wƒ‰ƒCƒuƒ‰ƒŠ‰Šú‰»ˆ—
 	if (DxLib_Init() == -1) 
