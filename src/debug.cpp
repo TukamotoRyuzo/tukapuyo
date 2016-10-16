@@ -2,6 +2,8 @@
 #include "rkiss.h"
 #include <iostream>
 
+TimeManagement Time;
+
 void MyOutputDebugString(LPCSTR pszFormat, ...)
 {
 	va_list	argp;

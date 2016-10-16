@@ -8,6 +8,7 @@
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 #include "rkiss.h"
+#include <chrono>
 
 void MyOutputDebugString(LPCSTR pszFormat, ...);
 
@@ -52,22 +53,25 @@ private:
 	LARGE_INTEGER counter_;
 };
 
-// ミリ秒単位の時間を表すクラス
-class Timer
+// ms単位での時間計測しか必要ないのでこれをTimePoint型のように扱う。
+typedef std::chrono::milliseconds::rep TimePoint;
+
+// ms単位で現在時刻を返す
+inline TimePoint now()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>
+		(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+class TimeManagement
 {
 public:
-    Timer() { restart(); }
 
-	// 計測開始時間を保存
-    void restart() { start_ = timeGetTime(); }
-
-	// リスタートからの秒数を返す
-    int elapsed()    
-    {
-        DWORD end = timeGetTime();
-        return (int)(end - start_);
-    }
+	int elapsed() const { return int(now() - startTime); }
+	void reset() { startTime = now(); }
 
 private:
-    DWORD start_;    //  計測開始時間
+	TimePoint startTime;
 };
+
+extern TimeManagement Time;

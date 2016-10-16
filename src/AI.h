@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+#include <thread>
 #include "field.h"
 #include "move.h"
 #include "search.h"
@@ -34,7 +36,7 @@ public:
 	template <NodeType NT>
 	Score search(Score alpha, Score beta, LightField& self, LightField& enemy, int depth, int enemy_put_time);// 基本となるアルファベータ探索
 	Score evaluateEX(LightField &self, LightField &enemy, int depth, int my_remain_time);
-
+	void checkTime();
 protected:
 
 	// 読みの深さ
@@ -52,6 +54,9 @@ protected:
 	Operate operate_;
 	int continue_self_num_;
 	unsigned char easy_;
+
+	std::atomic_bool stop;
+	int calls_count;
 };
 
 // 3つつなげるように努力する

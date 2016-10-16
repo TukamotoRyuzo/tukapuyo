@@ -2,12 +2,30 @@
 #include "tt.h"
 #include <cassert>
 #include <algorithm>
+
 #define HASH
-#define DEBUG
+//#define DEBUG
 unsigned int hash_hit;
+
+
+// 利用可能時間を過ぎて探索している場合、Signals.stopをtrueにして探索を中止する
+void AI::checkTime()
+{
+	// 経過時間
+	int elapsed = Time.elapsed();
+
+	if (elapsed > 300)
+	{
+		stop = true;
+		MyOutputDebugString("stop!");
+	}
+}
 
 int AI::thinkWrapper(const Field &self, const Field &enemy)
 {
+	Time.reset();
+	stop = false;
+	calls_count = 0;
 	int timeLimit = 999999;
 
 	if (enemy.flag(RENSA))// 敵が連鎖中
@@ -24,8 +42,19 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 
 	hash_hit = 0;
 
+
+	int depth;
+
 	// 思考開始
-	think(s, e, 0, timeLimit);
+	for (depth = 0; depth < depth_max_recieve_; depth++)
+	{
+		think(s, e, depth, timeLimit);
+
+		MyOutputDebugString("depth = %d, stop = %d\n", depth, stop);
+
+		if (stop)
+			break;
+	}
 
 	// ベストな手はbest_[0]にはいっている
 	// それを操作に変換
@@ -49,6 +78,11 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 // 基本思考ルーチン::depthMax手読み
 int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 {
+	if (calls_count++ > 1000)
+	{
+		checkTime();
+		calls_count = 0;
+	}
 #ifdef HASH
 	const int remain_depth = depth_max_ - depth;
 	TTEntry *tte;
@@ -125,6 +159,9 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 			}
 
 			self.undoMove(move[i], con_prev);
+
+			if (stop)
+				return SCORE_ZERO;
 
 			if (max < score)
 			{

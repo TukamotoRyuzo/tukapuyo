@@ -48,6 +48,11 @@ void PolytecAI::setLevel(int level)
 
 int AI::thinkWrapperEX(Field self, Field enemy)
 {
+	Time.reset();
+	stop = false;
+	calls_count = 0;
+	int timeLimit = 999999;
+
 	// 静かな局面になるまで局面を進める
 	int my_remain_time = enemy.generateStaticState(self);
 
@@ -119,6 +124,9 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 	// 反復深化
 	for (depth_max_ = 1; depth_max_ <= depth_max_recieve_; depth_max_++)
 	{
+		if (stop)
+			break;
+
 		try
 		{
 			// 前回のiterationでの指し手の点数をすべてコピー
@@ -176,6 +184,9 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 					alpha -= delta;
 					delta += delta / 2;
 				}
+
+				if (stop)
+					break;
 			}
 
 			// fail low / highをなるべく起こさないように調整する．
@@ -230,6 +241,12 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 template <NodeType NT>
 Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, int depth, int my_remain_time)
 {
+	if (calls_count++ > 100)
+	{
+		checkTime();
+		calls_count = 0;
+	}
+
 	node_searched++;
 	const bool rootnode = NT == ROOT;
 
@@ -244,6 +261,9 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	TTEntry* tte;
 	const Key key = self.key() ^ enemy.key();
 	const bool tt_hit = TT.probe<false>(&self, &enemy, tte);
+
+	if (stop)
+		return SCORE_ZERO;
 
 	// 局面表の指し手
 	if (rootnode)
@@ -361,6 +381,9 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		
 		enemy.setOjama(enemy_ojama_prev);
 		enemy.resetFlag(enemy_flag);
+
+		if (stop)
+			return SCORE_ZERO;
 
 		if (rootnode)
 		{

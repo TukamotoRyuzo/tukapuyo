@@ -18,16 +18,6 @@ typedef unsigned __int32 uint32_t;
 typedef   signed __int64  int64_t;
 typedef unsigned __int64 uint64_t;
 
-#  include <sys/timeb.h>
-
-// Œ»İ‚ğƒ~ƒŠ•b’PˆÊ‚Ü‚Å‹‚ß‚éB
-inline int64_t system_time_to_msec() 
-{
-	_timeb t;
-	_ftime(&t);
-	return t.time * 1000LL + t.millitm;
-}
-
 #ifndef NOMINMAX
 #  define NOMINMAX // disable macros min() and max()
 #endif
