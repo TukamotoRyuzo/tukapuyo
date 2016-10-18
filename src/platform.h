@@ -65,47 +65,4 @@ typedef unsigned __int64 uint64_t;
 #include <emmintrin.h>
 #endif
 
-//#define POLYTEC_FESTA
-
-typedef CRITICAL_SECTION Lock;
-typedef HANDLE WaitCondition;
-typedef HANDLE NativeHandle;
-
-// On Windows 95 and 98 parameter lpThreadId my not be null
-// Windows 95および98のパラメータlpThreadIdではnullにすることはできません。
-// myはmayの間違い？
-inline DWORD* dwWin9xKludge() { static DWORD dw; return &dw; }
-
-// クリティカルセクションオブジェクトのメモリ割り当て
-#  define lock_init(x) InitializeCriticalSection(&(x))
-
-// クリティカルセクションに入る
-#  define lock_grab(x) EnterCriticalSection(&(x))
-
-// クリティカルセクションから抜ける
-#  define lock_release(x) LeaveCriticalSection(&(x))
-
-// クリティカルセクションオブジェクトの削除
-#  define lock_destroy(x) DeleteCriticalSection(&(x))
-
-// イベントオブジェクトの作成
-#  define cond_init(x) { x = CreateEvent(0, FALSE, FALSE, 0); }
-
-// イベントオブジェクトを削除
-#  define cond_destroy(x) CloseHandle(x)
-
-// イベントをシグナル状態にする　待機関数(WaitFor〇〇関数)に引っかかるのが非シグナル状態
-#  define cond_signal(x) SetEvent(x)
-
-// イベントがシグナル状態になるまで待つ（永遠に）
-#  define cond_wait(x,y) { lock_release(y); WaitForSingleObject(x, INFINITE); lock_grab(y); }
-
-// イベントがシグナル状態になるまで待つ（zミリ秒）
-#  define cond_timedwait(x,y,z) { lock_release(y); WaitForSingleObject(x,z); lock_grab(y); }
-
-// スレッドの作成
-#  define thread_create(x,f,t) (x = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)f,t,0,dwWin9xKludge()))
-
-// わかんね
-#  define thread_join(x) { WaitForSingleObject(x, INFINITE); CloseHandle(x); }
-
+#define POLYTEC_FESTA

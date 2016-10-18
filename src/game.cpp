@@ -122,7 +122,38 @@ int Game::loop(const GameMode mode)
 			assets->gameFinal();
 			return 0;
 		}
+#if defined POLYTEC_FESTA
 
+		// どちらかが2本先取したらおわり
+		if (p1_win == 1 || p2_win == 1)
+		{
+			bool win = p1_win == 1;
+			// TODO : 現在挑戦していたLevelを表示をする
+			if (win)
+				assets->you_win.draw();
+			else
+				assets->you_lose.draw();
+
+			int level = ai3con2.getLevel();
+			assets->chain_num[level].setPosition(win ? 575 : 570, win ? 105 : 135);
+			assets->chain_num[level].draw();
+
+			// Rが押されたらゲームを再開する．押されるまでは操作不可能．
+			// これは当日，運営側が結果画面を確認した上で，次のお客さんが挑戦するときに運営に押してもらう．
+			// お客さん側はコントローラだけを持ち，お客さん側からは押せないようにする．
+			if (CheckHitKey(KEY_INPUT_R))
+			{
+				p1_win = p2_win = 0;
+				assets->click.play();
+				reInit();
+			}
+
+			// ループ終わりなのでfpsを60に保つためにここで呼び出す．
+			fps.update();
+			fps.wait();
+			continue;
+		}
+#endif
 		switch(fase)
 		{
 			case FADEIN:			fadeIn(); break;
@@ -213,7 +244,11 @@ GameResult Game::playLoop(const GameMode mode)
 	else if (mode == AITO) // "AIと対戦"用ループ
 	{
 #if defined(SPEED)
+#ifdef POLYTEC_FESTA
+		int s = 1;
+#else
 		int s = (CheckHitKey(KEY_INPUT_P)) ? 10 : 1;
+#endif
 		for (int cc = 0; cc < s; cc++)
 		{
 #endif
@@ -489,13 +524,16 @@ void Game::saveGame()
 
 #if defined (AIVSAI)
 	int flag = IDYES;
-#else
+#elif !defined POLYTEC_FESTA
 	int flag = MessageBox(
 		NULL,
 		TEXT("リプレイを保存しますか？"),
 		TEXT("リプレイ保存"),
 		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2);
+#else
+	int flag = IDYES;
 #endif
+
 	if (flag == IDYES)
 	{
 		// まず、先頭行のファイル数を書き換える
@@ -625,7 +663,7 @@ void Game::levelSelect()
 	}
 	else if (CheckHitKey(KEY_INPUT_DOWN))// 下キー
 	{
-		if (level_1p < 6 && timer % 8 == 0)
+		if (level_1p < 5 && timer % 8 == 0)
 		{
 			level_1p++;
 			y += 38;
@@ -698,6 +736,8 @@ void Game::borderDisappear()
 
 void Game::playing(GameResult* result, const GameMode mode, int *p1_win, int* p2_win)
 {
+
+#if !defined POLYTEC_FESTA
 	// ゲーム中にQが押されたらレベル選択に戻る。
 	if (CheckHitKey(KEY_INPUT_Q))
 	{
@@ -713,6 +753,8 @@ void Game::playing(GameResult* result, const GameMode mode, int *p1_win, int* p2
 
 		return;
 	}
+
+#endif
 
 	*result = playLoop(mode);
 

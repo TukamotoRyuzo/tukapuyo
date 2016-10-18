@@ -15,6 +15,7 @@ public:
 	AI(int d) :depth_max_recieve_(d) {};
 
 	void setLevel(int depth) { depth_max_recieve_ = depth; }
+	int getLevel() const { return depth_max_recieve_; }
 	Operate* operate() { return &operate_; }
 
 	int thinkWrapper(const Field &self, const Field &enemy);

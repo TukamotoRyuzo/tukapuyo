@@ -211,3 +211,7 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 *.opendb
+/DxLib_VC/プロジェクトに追加すべきファイル_VC用
+/src/tukapuyo.VC.db
+/exe/tukapuyo.iobj
+/exe/tukapuyo.ipdb
