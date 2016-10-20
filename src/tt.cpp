@@ -51,9 +51,7 @@ bool TranspositionTable::probe(const LightField* self, const LightField* enemy, 
 		// ‹ó‚©A“¯‚¶‹Ç–Ê‚ªŒ©‚Â‚©‚Á‚½
 		if (!tte[i].key32_ || (tte[i].key32_ == key32))
 		{
-			if (OnePlayer
-				|| (tte->player() == self->player() // Žè”Õ‚ªˆê’v
-					&& tte->ojama() == self->ojama() - enemy->ojama())) // ‚¨‚¶‚á‚Ü‚Õ‚æ‚Ì”‚ªˆê’v
+			if (OnePlayer || (tte->player() == self->player())) // Žè”Õ‚ªˆê’v
 			{
 				if (tte[i].generation_ != generation8_ && tte[i].key32_)
 					tte[i].generation_ = generation8_; // Refresh

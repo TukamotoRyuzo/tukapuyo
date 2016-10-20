@@ -14,7 +14,7 @@ void AI::checkTime()
 	// Œo‰ßŽžŠÔ
 	int elapsed = Time.elapsed();
 
-	if (elapsed > 300)
+	if (elapsed > 100)
 	{
 		stop = true;
 		MyOutputDebugString("stop!");
@@ -41,7 +41,6 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 	TT.newSearch();
 
 	hash_hit = 0;
-
 
 	int depth;
 

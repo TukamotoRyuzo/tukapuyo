@@ -100,7 +100,7 @@ public:
 			if (enemy.flag(RENSA) && enemy.chainMax() > 7/* && self.getPuyoNum() < 45*/)// “G‚ª˜A½’†
 			{
 				int save = depth_max_recieve_;
-				depth_max_recieve_ = 6;
+				depth_max_recieve_ = 5;
 				int score = thinkWrapper(self, enemy);
 				depth_max_recieve_ = save;
 				return score;

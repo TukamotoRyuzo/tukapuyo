@@ -53,7 +53,7 @@ Score LightField::maxChainsScore(const int ply_max, const int remain_time)
 		else
 		{
 			// 2手以内に打てる連鎖のリストを構築する．
-			const Score chains_score = searchChains(3);
+			const Score chains_score = searchChains(2);
 
 			if (chains_score == SCORE_MATED)
 				return SCORE_MATED;

@@ -18,6 +18,8 @@
 #define AILEVEL_1p 4
 #define ONE_PLAY_LINE 4
 
+#define GAME_NUM 2
+
 enum
 {
 	SEEDA = 1445, SEEDB = 3, SEEDC = 7, SEEDD = 349,
@@ -125,10 +127,10 @@ int Game::loop(const GameMode mode)
 #if defined POLYTEC_FESTA
 
 		// どちらかが2本先取したらおわり
-		if (p1_win == 1 || p2_win == 1)
+		if (p1_win == GAME_NUM || p2_win == GAME_NUM)
 		{
-			bool win = p1_win == 1;
-			// TODO : 現在挑戦していたLevelを表示をする
+			bool win = p1_win == GAME_NUM;
+
 			if (win)
 				assets->you_win.draw();
 			else
@@ -153,6 +155,7 @@ int Game::loop(const GameMode mode)
 			fps.wait();
 			continue;
 		}
+
 #endif
 		switch(fase)
 		{
@@ -508,6 +511,7 @@ void Game::gameOver()
 		saveGame();
 #endif
 	}
+
 	reInit();
 
 	if (isZuruMode())
@@ -800,6 +804,17 @@ void Game::gameResult(const GameResult result, const int p1_win, const int p2_wi
 #endif
 		gameOver();
 		i = 0;
+
+		if (p1_win < GAME_NUM && p2_win < GAME_NUM && (p1_win || p2_win))
+		{
+			MessageBox(
+				NULL,
+				TEXT("再開します。○ボタンを押してください。"),
+				TEXT("いったんきゅうけい"),
+				MB_OK | MB_ICONQUESTION);
+
+			fase = PLAYING;
+		}
 	}
 }
 
