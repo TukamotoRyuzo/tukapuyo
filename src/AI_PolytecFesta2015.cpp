@@ -223,6 +223,7 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 			break;
 		}
 	}
+
 	MyOutputDebugString("\n");
 
 	// ’Tõ‚µ‚½Œ‹‰Ê“¾‚ç‚ê‚½è‚ğÀÛ‚É”z’u‚Å‚«‚é‚©‚Ç‚¤‚©B

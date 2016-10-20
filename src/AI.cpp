@@ -128,8 +128,6 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 #endif
 		for (int i = 0; i < movenum; i++)
 		{
-			Key selfkey = self.key();
-
 			// generateMoves‚Å‚à‚Æ‚ß‚½êŠ‚É‚¨‚¢‚Ä‚Ý‚é
 			self.doMove<true>(move[i]);
 			assert(self.key() == self.keyInit());

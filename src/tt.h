@@ -41,7 +41,7 @@ struct TTEntry
 			move16_ = m;
 
 		if ((k >> 32) != key32_
-			|| d > depth_ - 4
+			|| d >= depth_
 			|| b == BOUND_EXACT)
 		{
 			key32_ = (uint32_t)(k >> 32);

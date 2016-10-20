@@ -68,7 +68,7 @@ Score LightField::maxChainsScore(const int ply_max, const int remain_time)
 			{
 				// 連鎖を打たれていない場合や4手以上余裕があるなら，色補完をして連鎖があるかどうか調べる．
 				// 2列以上振る連鎖を相手に打たれていて時間もあまりないなら，色補完は一つだけで調べる．
-				const int help_max = 2;// ojama_ > 12 ? 1 : 2;
+				const int help_max = ojama_ > 12 ? 1 : 2;
 
 				// ぷよぷよが8列以上積まれているなら，連鎖を見つける条件を厳しくする．
 				if (field_puyo_num_ + field_ojama_num_ > 42 && flag(PLAYER_AI))
