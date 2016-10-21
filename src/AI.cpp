@@ -14,7 +14,7 @@ void AI::checkTime()
 	// åoâﬂéûä‘
 	int elapsed = Time.elapsed();
 
-	if (elapsed > 100)
+	if (elapsed > 50)
 	{
 		stop = true;
 		MyOutputDebugString("stop!");
@@ -45,11 +45,11 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 	int depth;
 
 	// évçläJén
-	for (depth = 0; depth < depth_max_recieve_; depth++)
+	for (depth_max_ = 0; depth_max_ < depth_max_recieve_; depth_max_++)
 	{
-		think(s, e, depth, timeLimit);
+		think(s, e, 0, timeLimit);
 
-		MyOutputDebugString("depth = %d, stop = %d\n", depth, stop);
+		MyOutputDebugString("depth = %d, stop = %d\n", depth_max_, stop);
 
 		if (stop)
 			break;
@@ -82,6 +82,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		checkTime();
 		calls_count = 0;
 	}
+
 #ifdef HASH
 	const int remain_depth = depth_max_ - depth;
 	TTEntry *tte;
@@ -94,6 +95,8 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		// ã«ñ Ç™ìoò^Ç≥ÇÍÇƒÇ¢ÇΩ
 		if (tt_hit)
 		{
+			assert(tte->depth() >= 0);
+
 			// ã«ñ ï\Ç…ìoò^Ç≥ÇÍÇƒÇ¢ÇÈã«ñ Ç™ÅAåªç›ÇÃã«ñ ÇÃécÇËê[Ç≥à»è„
 			if (tte->depth() >= remain_depth)
 			{
@@ -106,7 +109,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 	}
 #endif
 
-	if (depth >= depth_max_recieve_)
+	if (depth >= depth_max_)
 		return evalate(self, enemy, depth, timeLimit);
 	else
 	{	

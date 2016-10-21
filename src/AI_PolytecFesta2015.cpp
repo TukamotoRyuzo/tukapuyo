@@ -114,7 +114,7 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 
 	for (int i = 0; i < mcount; ++i)
 	{
-		root_moves.push_back(Search:: RootMove(mlist[i]));
+		root_moves.push_back(Search::RootMove(mlist[i]));
 		root_moves[i].player.push_back(self.player());
 	}
 	
@@ -126,6 +126,8 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 	{
 		if (stop)
 			break;
+
+		MyOutputDebugString("depth = %d, stop = %d\n", depth_max_, stop);
 
 		try
 		{
