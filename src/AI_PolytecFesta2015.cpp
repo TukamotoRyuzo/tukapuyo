@@ -13,34 +13,34 @@ void PolytecAI::setLevel(int level)
 {
 	assert(level >= 1 && level <= 6);
 
-	if(level == 1)
+	if (level == 1)
 	{
-		depth_max_recieve_ = 1;
+		depth_max_ = 1;
 		easy_ = 2;
 	}
-	else if(level == 2)
+	else if (level == 2)
 	{
-		depth_max_recieve_ = 1;
+		depth_max_ = 1;
 		easy_ = 1;
 	}
-	else if(level == 3)
+	else if (level == 3)
 	{
-		depth_max_recieve_ = 4;
+		depth_max_ = 4;
 		easy_ = 1;
 	}
-	else if(level == 4)
+	else if (level == 4)
 	{
-		depth_max_recieve_ = 4;
+		depth_max_ = 4;
 		easy_ = 0;
 	}
-	else if(level == 5)
+	else if (level == 5)
 	{
-		depth_max_recieve_ = 2;
+		depth_max_ = 20;
 		easy_ = 0;
 	}
 	else
 	{
-		depth_max_recieve_ = 4;
+		depth_max_ = 4;
 		easy_ = 0;
 	}
 	level_ = level;
@@ -94,14 +94,14 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 	e.setChains(c2);
 
 	// 世代を進める
-	TT.newSearch();                             
+	TT.newSearch();
 
-    Score alpha = -SCORE_INFINITE;	// α:下限値
-	Score beta  = SCORE_INFINITE;	// β:上限値
+	Score alpha = -SCORE_INFINITE;	// α:下限値
+	Score beta = SCORE_INFINITE;	// β:上限値
 	Score delta = alpha;
 	Score score = SCORE_ZERO;
 	continue_self_num_ = 0;
-	
+
 	Move best_move;
 
 	Move mlist[22];
@@ -117,113 +117,97 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 		root_moves.push_back(Search::RootMove(mlist[i]));
 		root_moves[i].player.push_back(self.player());
 	}
-	
-	// aspiration searchでfail low / fail highを起こした回数．これが少なくてしかも小さいdeltaであればよい
-	int aspiration_miss = 0;
 
 	// 反復深化
-	for (depth_max_ = 1; depth_max_ <= depth_max_recieve_; depth_max_++)
+	for (Depth d = ONE_PLY; d <= depth_max_; ++d)
 	{
 		if (stop)
 			break;
 
-		MyOutputDebugString("depth = %d, stop = %d\n", depth_max_, stop);
+		MyOutputDebugString("depth = %d, stop = %d\n", d, stop);
 
-		try
+		// 前回のiterationでの指し手の点数をすべてコピー
+		for (int i = 0; i < root_moves.size(); ++i)
+			root_moves[i].previous_score = root_moves[i].score;
+
+#if 0
+		// aspiration search
+		// alpha betaをある程度絞ることで、探索効率を上げる。
+		if (3 <= depth_max_ && abs(root_moves[0].previous_score) < SCORE_INFINITE)
 		{
-			// 前回のiterationでの指し手の点数をすべてコピー
-			for (int i = 0; i < root_moves.size(); ++i)
-				root_moves[i].previous_score = root_moves[i].score;
+			delta = static_cast<Score>(5);
+			alpha = static_cast<Score>(root_moves[0].previous_score) - delta;
+			beta = static_cast<Score>(root_moves[0].previous_score) + delta;
+		}
+		else
+#endif
+		{
+			alpha = -SCORE_INFINITE;
+			beta = SCORE_INFINITE;
+		}
 
-			// aspiration search
-			// alpha betaをある程度絞ることで、探索効率を上げる。
-			if (3 <= depth_max_ && abs(root_moves[0].previous_score) < SCORE_INFINITE)
+		// aspiration search のwindow幅をはじめは小さい値にして探索し、
+		// fail high/lowになったなら、今度はwindow幅を広げて再探索を行う。
+		while (true)
+		{
+			// 探索開始
+			score = search<ROOT>(alpha, beta, s, e, d, my_remain_time);
+
+			// 先頭が最善手になるようにソート
+			insertionSort(root_moves.begin(), root_moves.end());
+
+			// fail high / lowが起きなかった場合はループを抜ける。
+			if (alpha < score && score < beta)
+				break;
+
+			// fail low/highが起きた場合、aspiration窓を増加させ再探索し、
+			// さもなくばループを抜ける。
+			if (abs(score) >= Score(10000))
 			{
-				delta = static_cast<Score>(5);
-				alpha = static_cast<Score>(root_moves[0].previous_score) - delta;
-				beta = static_cast<Score>(root_moves[0].previous_score) + delta;
-			}
-			else
-			{
+				// 勝ちか負けだと判定したら、最大の幅で探索を試してみる。
 				alpha = -SCORE_INFINITE;
 				beta = SCORE_INFINITE;
 			}
-
-			// aspiration search のwindow幅をはじめは小さい値にして探索し、
-			// fail high/lowになったなら、今度はwindow幅を広げて再探索を行う。
-			while (true)
+			else if (beta <= score)
 			{
-				// 探索開始
-				score = search<ROOT>(alpha, beta, s, e, 0, my_remain_time);
-
-				// 先頭が最善手になるようにソート
-				insertionSort(root_moves.begin(), root_moves.end());
-
-				// fail high / lowが起きなかった場合はループを抜ける。
-				if (alpha < score && score < beta)
-					break;
-
-				// fail low/highが起きた場合、aspiration窓を増加させ再探索し、
-				// さもなくばループを抜ける。
-				if (abs(score) >= Score(10000))
-				{
-					// 勝ちか負けだと判定したら、最大の幅で探索を試してみる。
-					alpha = -SCORE_INFINITE;
-					beta = SCORE_INFINITE;
-				}
-				else if (beta <= score)
-				{
-					aspiration_miss++;
-					// fail highならば、これ以上の値が期待できるわけでありponder hitすればこれをbest moveとして
-					// 返しても問題がないはずで、上のような処理はなく、単に上側をdeltaだけ広げる。
-					beta += delta;
-					delta += delta / 2;
-				}
-				else
-				{
-					aspiration_miss++;
-					// fail lowしているので、下側をさらにdeltaだけ広げる
-					alpha -= delta;
-					delta += delta / 2;
-				}
-
-				if (stop)
-					break;
+				beta += delta;
+				delta += delta / 2;
+			}
+			else
+			{
+				alpha -= delta;
+				delta += delta / 2;
 			}
 
-			// fail low / highをなるべく起こさないように調整する．
-			MyOutputDebugString("asp_miss = %d ", aspiration_miss);
-			aspiration_miss = 0;
-			best_move = best_[0];
-
-			MyOutputDebugString("score = %d, depth = %d, best = ", score, depth_max_);
-
-			int s_field_ply = 0;
-			int e_field_ply = 0;
-
-			// pv表示
-			for (int size = 0; size < root_moves[0].pv.size() - 1; size++)
-			{
-				LightField* now_player = root_moves[0].player[size] == self.player() ? &self : &enemy;
-
-				int now_field_ply;
-
-				if (now_player == &self)
-					now_field_ply = s_field_ply++;
-				else
-					now_field_ply = e_field_ply++;
-				
-				MyOutputDebugString("%s%s,",
-					root_moves[0].player[size] == PLAYER1 ? "P1:" : "P2:",
-					root_moves[0].pv[size].toString(*now_player, now_field_ply).c_str());
-			}
-			MyOutputDebugString("\n");			
+			if (stop)
+				break;
 		}
-		catch(int)
+
+		best_move = stop ? best_move : best_[d];
+
+		MyOutputDebugString("score = %d, depth = %d, best = %s", score, depth_max_, best_move.toString(self, 0));
+
+		int s_field_ply = 0;
+		int e_field_ply = 0;
+
+		// pv表示
+		for (int size = 0; size < root_moves[0].pv.size() - 1; size++)
 		{
-			MyOutputDebugString("terminated depth = %d", depth_max_);
-			break;
+			LightField* now_player = root_moves[0].player[size] == self.player() ? &self : &enemy;
+
+			int now_field_ply;
+
+			if (now_player == &self)
+				now_field_ply = s_field_ply++;
+			else
+				now_field_ply = e_field_ply++;
+
+			MyOutputDebugString("%s%s,",
+				root_moves[0].player[size] == PLAYER1 ? "P1:" : "P2:",
+				root_moves[0].pv[size].toString(*now_player, now_field_ply).c_str());
 		}
+
+		MyOutputDebugString("\n");
 	}
 
 	MyOutputDebugString("\n");
@@ -255,8 +239,8 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 
 	assert(alpha >= -SCORE_INFINITE && alpha < beta && beta <= SCORE_INFINITE);
 
-	// 残り深さ
-	int remain_depth = depth_max_ - depth;
+	// ルートからの手数
+	int ply = depth_max_ - depth;
 
 	// 局面表を見る
 	Move tt_move, best_move;
@@ -269,15 +253,8 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		return SCORE_ZERO;
 
 	// 局面表の指し手
-	if (rootnode)
-	{
-		if (depth_max_ == 1)
-			tt_move = tt_hit ? tte->move() : Move::moveNone();
-		else
-			tt_move = root_moves[0].pv[0];
-	}
-	else
-		tt_move = tt_hit ? tte->move() : Move::moveNone();
+	tt_move = tt_hit ? tte->move() :
+		rootnode ? root_moves[0].pv[0] : Move::moveNone();
 
 	// 置換表上のスコア
 	tt_score = tt_hit ? tte->score() : SCORE_NONE;
@@ -292,13 +269,13 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	// non PV nodeであれば置換表の値がbetaを超えているならBOUND_LOWER(真の値はこれより上なのでこのときbeta cutできる)であるか、
 	// betaを超えていないのであれば、BOUND_UPPER(真の値はこれより下なのでこのときbeta cutが起きないことが確定)である。
 
-	if (!rootnode 
+	if (!rootnode
 		&& tt_hit
-		&& tte->depth() >= remain_depth
-		&& (remain_depth == 0
-		|| (tte->bound() == BOUND_EXACT
-		|| (tte->bound() == BOUND_LOWER && tt_score >= beta))))
-	{		
+		&& tte->depth() >= depth
+		&& (depth == 0
+			|| (tte->bound() == BOUND_EXACT
+				|| (tte->bound() & BOUND_LOWER && tt_score >= beta))))
+	{
 		best_[depth] = tte->move();
 
 		assert(tte->move().isNone() || tte->move().isLegal(self));
@@ -308,7 +285,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	}
 
 	// 最大探索深さまでいったら、その局面の点数を返す
-	if (depth >= depth_max_)
+	if (depth <= DEPTH_ZERO)
 	{
 		Score s = evaluateEX(self, enemy, depth, my_remain_time);
 
@@ -336,9 +313,9 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		// 置く場所なし == 負け
 		return SCORE_MATED;
 	}
-		
+
 	Score score, max = -SCORE_INFINITE;
-	
+
 	// お邪魔ぷよが降る場合はenemyのojamaを減らしているので、
 	// このmoveを調べ終わった後元に戻さなければならない
 	int enemy_ojama_prev = enemy.ojama();
@@ -362,7 +339,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 			continue_self_num_ = 0;
 
 			// 相手の探索をする。残り時間の超過分は、相手の残り時間になる。
-			score = -search<PV>(-beta, -alpha, enemy, self2, depth + 1, -(my_remain_time - put_time));
+			score = -search<PV>(-beta, -alpha, enemy, self2, depth - 1, -(my_remain_time - put_time));
 		}
 		else
 		{
@@ -371,17 +348,17 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 			// 連続3回以上自分の探索をした場合はこれ以上深く探索しないために残り深さを減らす。(重すぎるので)
 			if (continue_self_num_ >= 3)
 			{
-				score = search<PV>(alpha, beta, self2, enemy, depth_max_, my_remain_time - put_time);
+				score = search<PV>(alpha, beta, self2, enemy, 0, my_remain_time - put_time);
 			}
 			else
 			{
 				// 残り時間が残っている間は、連続して自分の探索をする
-				score = search<PV>(alpha, beta, self2, enemy, depth + 1, my_remain_time - put_time);
+				score = search<PV>(alpha, beta, self2, enemy, depth - 1, my_remain_time - put_time);
 			}
 
 			continue_self_num_--;
 		}
-		
+
 		enemy.setOjama(enemy_ojama_prev);
 		enemy.resetFlag(enemy_flag);
 
@@ -393,7 +370,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 			// Root nodeでの指し手のなかから、いま探索したばかりの指し手に関してそれがどこにあるかをfind()で探し、
 			// この指し手に付随するPV(最善応手列)を置換表から取り出して更新しておく。
 			// このfind()が失敗することは想定していない。
-			Search:: RootMove& rm = *std::find(root_moves.begin(), root_moves.end(), move[i]);
+			Search::RootMove& rm = *std::find(root_moves.begin(), root_moves.end(), move[i]);
 
 			if (score > alpha)
 			{
@@ -418,10 +395,10 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 		if (score > max)
 		{
 			max = score;
-			best_[depth] = move[i];	
+			best_[depth] = move[i];
 
 			if (max > alpha)
-			{				
+			{
 				alpha = max;
 
 				if (alpha >= beta)
@@ -429,7 +406,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 					// βカットされたalphaという値は正確な値ではないが、そのノードの評価値は最低でもalpha以上だということがわかる。
 					// なので、alphaはそのノードの下限値である。だからBOUND_LOWER
 					break;
-				}				
+				}
 			}
 		}
 	}
@@ -437,7 +414,7 @@ Score AI::search(Score alpha, Score beta, LightField& self, LightField& enemy, i
 	self.nextMinus();
 
 	// 最大でも評価値はmaxまでしか行かない
-	tte->save(key, best_[depth].get(), max, remain_depth, TT.generation(),
+	tte->save(key, best_[depth].get(), max, depth, TT.generation(),
 		max < beta ? BOUND_EXACT : BOUND_LOWER, self.player(), my_remain_time, self.ojama() - enemy.ojama());
 
 	return max;

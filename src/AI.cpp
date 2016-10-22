@@ -14,7 +14,7 @@ void AI::checkTime()
 	// 経過時間
 	int elapsed = Time.elapsed();
 
-	if (elapsed > 50)
+	if (elapsed > 60)
 	{
 		stop = true;
 		MyOutputDebugString("stop!");
@@ -43,13 +43,14 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 	hash_hit = 0;
 
 	int depth;
+	Move best_move;
 
 	// 思考開始
-	for (depth_max_ = 0; depth_max_ < depth_max_recieve_; depth_max_++)
+	for (Depth d = ONE_PLY; d <= depth_max_; ++d)
 	{
-		think(s, e, 0, timeLimit);
-
-		MyOutputDebugString("depth = %d, stop = %d\n", depth_max_, stop);
+		think(s, e, d, timeLimit);
+		best_move = stop ? best_move : best_[d];
+		MyOutputDebugString("depth = %d, stop = %d\n", d, stop);
 
 		if (stop)
 			break;
@@ -59,15 +60,15 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 	// それを操作に変換
 	if (easy_ == 0)
 	{
-		operate_.generate(best_[0], self);
+		operate_.generate(best_move, self);
 	}
 	else if (easy_ == 1)
 	{
-		operate_.easyGenerate(best_[0], self);
+		operate_.easyGenerate(best_move, self);
 	}
 	else if (easy_ == 2)
 	{
-		operate_.veryEasyGenerate(best_[0], self);
+		operate_.veryEasyGenerate(best_move, self);
 	}
 	
 	return 0;
@@ -83,12 +84,14 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		calls_count = 0;
 	}
 
+	// rootからの手数
+	int ply = depth_max_ - depth;
+
 #ifdef HASH
-	const int remain_depth = depth_max_ - depth;
 	TTEntry *tte;
 
 	// 同一局面が発生するのは2手目以降しかありえない。
-	if (depth >= 2)
+	if (ply > 0)
 	{
 		bool tt_hit = TT.probe<true>(&self, nullptr, tte);
 
@@ -98,7 +101,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 			assert(tte->depth() >= 0);
 
 			// 局面表に登録されている局面が、現在の局面の残り深さ以上
-			if (tte->depth() >= remain_depth)
+			if (tte->depth() >= depth)
 			{
 				best_[depth] = tte->move();
 
@@ -109,7 +112,7 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 	}
 #endif
 
-	if (depth >= depth_max_)
+	if (depth <= DEPTH_ZERO)
 		return evalate(self, enemy, depth, timeLimit);
 	else
 	{	
@@ -152,10 +155,10 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 					if (enemy.scoreMax() >= 30 * RATE || enemy.scoreMax() >= self.deadLine() * RATE) 
 						score = -SCORE_INFINITE;
 					else 
-						score = think(self, enemy, depth + 1, timeLimit - takeTime) - takeTime;
+						score = think(self, enemy, depth - ONE_PLY, timeLimit - takeTime) - takeTime;
 				}
 				else
-					score = think(self, enemy, depth + 1, timeLimit - takeTime) - takeTime;
+					score = think(self, enemy, depth - ONE_PLY, timeLimit - takeTime) - takeTime;
 			}
 
 			self.undoMove(move[i], con_prev);
@@ -177,10 +180,10 @@ int AI::think(LightField &self, LightField &enemy, int depth, int timeLimit)
 		self.nextMinus();
 
 #ifdef HASH
-		if (depth >= 2)
+		if (ply > 0)
 		{
 			// この探索では後ろ二つの引数は使わない
-			tte->save(self.key(), best_[depth].get(), max, remain_depth, TT.generation(), BOUND_EXACT, 0, 0, 0);
+			tte->save(self.key(), best_[depth].get(), max, depth, TT.generation(), BOUND_EXACT, 0, 0, 0);
 		}
 #endif
 		return max;
@@ -216,7 +219,7 @@ int AI3Connect::evalVanish(LightField self, const LightField &enemy, int depth, 
 	if (timeLimit - self.chain() * CHAINTIME <= 0)
 	{
 		if (enemy.scoreMax() - self.score() > self.deadLine() * (int)RATE)// 致死量を返しきれないなら負け
-			score = -100000 * (depth_max_recieve_ - depth);
+			score = -100000 * depth;
 	}
 
 	if (self.isEmpty())// 全けし

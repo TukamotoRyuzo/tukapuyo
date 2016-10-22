@@ -12,10 +12,10 @@ class AI
 {
 public:
 	AI() {};
-	AI(int d) :depth_max_recieve_(d) {};
+	AI(int d) :depth_max_(d) {};
 
-	void setLevel(int depth) { depth_max_recieve_ = depth; }
-	int getLevel() const { return depth_max_recieve_; }
+	void setLevel(int depth) { depth_max_ = depth; }
+	int getLevel() const { return depth_max_; }
 	Operate* operate() { return &operate_; }
 
 	int thinkWrapper(const Field &self, const Field &enemy);
@@ -46,10 +46,7 @@ protected:
 	// レベル
 	int level_;
 
-	// ユーザからもらった値。この深さで探索する。
-	int depth_max_recieve_;
-
-	Move best_[10];
+	Move best_[DEPTH_MAX];
 
 	std::vector<Search::RootMove> root_moves;
 	Operate operate_;
@@ -99,18 +96,18 @@ public:
 		{
 			if (enemy.flag(RENSA) && enemy.chainMax() > 7/* && self.getPuyoNum() < 45*/)// 敵が連鎖中
 			{
-				int save = depth_max_recieve_;
-				depth_max_recieve_ = 5;
+				int save = depth_max_;
+				depth_max_ = 6;
 				int score = thinkWrapper(self, enemy);
-				depth_max_recieve_ = save;
+				depth_max_ = save;
 				return score;
 			}
 			else if (self.getPuyoNum() < 12)
 			{
-				int save = depth_max_recieve_;
-				depth_max_recieve_ = 4;
+				int save = depth_max_;
+				depth_max_ = 6;
 				int score = thinkWrapper(self, enemy);
-				depth_max_recieve_ = save;
+				depth_max_ = save;
 				return score;
 			}
 			else

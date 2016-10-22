@@ -15,7 +15,7 @@
 //#define ZOROME
 //#define AIVSAI
 #define SPEED 10
-#define AILEVEL_1p 4
+#define AILEVEL_1p 5
 #define ONE_PLAY_LINE 4
 
 #define GAME_NUM 2
@@ -116,6 +116,8 @@ int Game::loop(const GameMode mode)
 	// メインループ
 	while(!ScreenFlip() && !ProcessMessage() && !ClearDrawScreen())
 	{
+
+#if !defined POLYTEC_FESTA
 		// escキーが押されたらメニュー画面に戻る
 		if (CheckHitKey(KEY_INPUT_E))
 		{
@@ -124,6 +126,7 @@ int Game::loop(const GameMode mode)
 			assets->gameFinal();
 			return 0;
 		}
+#endif
 #if defined POLYTEC_FESTA
 
 		// どちらかが2本先取したらおわり
@@ -155,7 +158,6 @@ int Game::loop(const GameMode mode)
 			fps.wait();
 			continue;
 		}
-
 #endif
 		switch(fase)
 		{
@@ -247,11 +249,11 @@ GameResult Game::playLoop(const GameMode mode)
 	else if (mode == AITO) // "AIと対戦"用ループ
 	{
 #if defined(SPEED)
-#ifdef POLYTEC_FESTA
-		int s = 1;
-#else
+//#ifdef POLYTEC_FESTA
+//		int s = 1;
+//#else
 		int s = (CheckHitKey(KEY_INPUT_P)) ? 10 : 1;
-#endif
+//#endif
 		for (int cc = 0; cc < s; cc++)
 		{
 #endif
@@ -261,8 +263,8 @@ GameResult Game::playLoop(const GameMode mode)
 				gs.push(GameState(*f1, *f2, *ai3con.operate(), *ai3con2.operate()));
 
 				if (f1->flag(PLAYER_AI))
-					ai3con.thinkWrapperEX(*f1, *f2);
-				//	ai3con.thinkWrapper(*f1, *f2);
+				//	ai3con.thinkWrapperEX(*f1, *f2);
+					ai3con.thinkWrapper(*f1, *f2);
 			}
 
 			if (!f1->procedure(*f2, ai3con.operate()))
