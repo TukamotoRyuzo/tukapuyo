@@ -145,9 +145,7 @@
     <ClCompile Include="mainmenu.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="nameboad.cpp" />
-    <ClCompile Include="search.cpp" />
     <ClCompile Include="sound.cpp" />
-    <ClCompile Include="thread.cpp" />
     <ClCompile Include="tt.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -171,7 +169,6 @@
     <ClInclude Include="rkiss.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="sound.h" />
-    <ClInclude Include="thread.h" />
     <ClInclude Include="tt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

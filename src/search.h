@@ -60,9 +60,6 @@ namespace Search
 		std::vector<Move> pv;
 		std::vector<Flag> player;
 	};
-
-	void init();
-	void clear();
 } // namespace Search
 
 template <typename T> inline void insertionSort(T first, T last)

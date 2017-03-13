@@ -66,13 +66,7 @@
     <ClCompile Include="nameboad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="search.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sound.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tt.cpp">
@@ -138,9 +132,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tt.h">
