@@ -8,7 +8,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetAlwaysRunFlag(TRUE);
 	ChangeWindowMode(TRUE);
 	SetMainWindowText("tukapuyo");
-	SetWindowSizeExtendRate(2.0);
+	//SetWindowSizeExtendRate(2.0);
 
 	// ‚c‚wƒ‰ƒCƒuƒ‰ƒŠ‰Šú‰»ˆ—
 	if (DxLib_Init() == -1) 

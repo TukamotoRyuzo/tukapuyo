@@ -811,7 +811,7 @@ void Game::gameResult(const GameResult result, const int p1_win, const int p2_wi
 		{
 			MessageBox(
 				NULL,
-				TEXT("再開します。○ボタンを押してください。"),
+				TEXT("再開します。□ボタンを押してください。"),
 				TEXT("いったんきゅうけい"),
 				MB_OK | MB_ICONQUESTION);
 
