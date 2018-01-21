@@ -363,7 +363,8 @@ bool Game::selectedReplay()
 		getchar();
 		replay_num = 0;
 	}
-	FreeConsole();
+    
+    FreeConsole();
 
 	// リプレイモードに移項しない場合はすべてこのifで引っかかる。
 	if (replay_num == 0)
@@ -544,7 +545,9 @@ void Game::saveGame()
 	{
 		// まず、先頭行のファイル数を書き換える
 		std::fstream fst(history_file, std::ios::in | std::ios::out);
-		if (fst)
+        bool file_exist = fst.is_open();
+
+		if (file_exist)
 		{
 			int file_max;
 			fst >> file_max;
@@ -557,6 +560,9 @@ void Game::saveGame()
 
 		// ファイル出力ストリームの初期化
 		std::ofstream ofs(history_file, std::ios::app);
+
+        if (!file_exist)
+            ofs << "1" << std::endl;
 
 		// ファイルに1行ずつ書き込み
 		ofs << assets->operate_history_1p;
