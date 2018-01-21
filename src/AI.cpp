@@ -50,7 +50,7 @@ int AI::thinkWrapper(const Field &self, const Field &enemy)
 	{
 		think(s, e, d, timeLimit);
 		best_move = stop ? best_move : best_[d];
-		MyOutputDebugString("depth = %d, stop = %d\n", d, stop);
+		MyOutputDebugString("depth = %d, stop = %d\n", d, (bool)stop);
 
 		if (stop)
 			break;

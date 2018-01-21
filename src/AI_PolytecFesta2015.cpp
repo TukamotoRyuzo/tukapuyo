@@ -124,7 +124,7 @@ int AI::thinkWrapperEX(Field self, Field enemy)
 		if (stop)
 			break;
 
-		MyOutputDebugString("depth = %d, stop = %d\n", d, stop);
+		MyOutputDebugString("depth = %d, stop = %d\n", d, (bool)stop);
 
 		// 前回のiterationでの指し手の点数をすべてコピー
 		for (int i = 0; i < root_moves.size(); ++i)

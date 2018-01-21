@@ -806,7 +806,7 @@ void Game::gameResult(const GameResult result, const int p1_win, const int p2_wi
 #endif
 		gameOver();
 		i = 0;
-
+#ifdef POLYTEC_FESTA
 		if (p1_win < GAME_NUM && p2_win < GAME_NUM && (p1_win || p2_win))
 		{
 			MessageBox(
@@ -817,6 +817,7 @@ void Game::gameResult(const GameResult result, const int p1_win, const int p2_wi
 
 			fase = PLAYING;
 		}
+#endif
 	}
 }
 
