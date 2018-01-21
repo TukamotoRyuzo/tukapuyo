@@ -3,7 +3,7 @@
 Windowsで動くぷよぷよ風ゲームです。
 AIとの対戦が可能で、レベル1～5までを選択できます。
 
-![Screenshot](https://raw.githubusercontent.com/TukamotoRyuzo/tukapuyo/blob/master/screenshot/screenshot.png)
+![Screenshot](https://github.com/TukamotoRyuzo/tukapuyo/blob/master/screenshot/tukapuyo_screenshot.png)
 
 # モード
 *ひとりでモード   
@@ -15,11 +15,11 @@ AIと対戦することができます。
   
 # 操作方法
 	↑↓→←   : カーソル移動、ぷよを移動
-	x	   : 決定・時計回り回転
-	z	   : 反時計回り回転
+	x      : 決定・時計回り回転
+	z      : 反時計回り回転
 	space  : 時間を止める
 	e      : メニューに戻る
-	q	   : (試合/リプレイ再生)を途中でやめる
+	q      : (試合/リプレイ再生)を途中でやめる
 	1      : リプレイ再生
 	2      : ずるもーど
 	p      : 10倍速再生
