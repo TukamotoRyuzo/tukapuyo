@@ -1,7 +1,9 @@
 # tukapuyo
 
-Windowsで動くぷよぷよ風ゲームです。  
-  
+Windowsで動くぷよぷよ風ゲームです。  
+以下のURLからダウンロードできます。
+https://github.com/TukamotoRyuzo/tukapuyo/releases  
+
 ![Screenshot](https://raw.githubusercontent.com/TukamotoRyuzo/tukapuyo/master/screenshot/tukapuyo_screenshot.png)
 
 # モード
