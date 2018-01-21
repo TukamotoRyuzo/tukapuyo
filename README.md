@@ -3,7 +3,7 @@
 Windowsで動くぷよぷよ風ゲームです。
 AIとの対戦が可能で、レベル1～5までを選択できます。
 
-![Screenshot](https://raw.githubusercontent.com/TukamotoRyuzo/tukapuyo/master/screenshot/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/TukamotoRyuzo/tukapuyo/blob/master/screenshot/screenshot.png)
 
 # モード
 *ひとりでモード   
